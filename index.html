@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CRO Hub · Roadmap de testing por funnel</title>
+<title>Pipeline/Roadmap</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Geist+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="https://assets-manager.abtasty.com/1c94758205a046f98bb061ac07249edb/account/logi-icon-1024x1024.png">
@@ -12,13 +12,13 @@
 /* Tokens tomados del CRO Hub: Roboto, sidebar #003366, ámbar #fab040, fondo #f4f7fb, cards blancas r12, cabeceras #0f172a */
 :root{
   --bg:#0c1221;--panel:#111827;--panel2:#1e293b;--line:#263449;--tx:#e2e8f0;--mut:#94a3b8;--acc:#fab040;--acc-tx:#0f172a;
-  --live:#fab040;--paused:#7b8596;--ana:#70d0f8;--end:#66db8c;--draft:#94a3b8;--bad:#e05252;--warn:#fbbf24;
+  --live:#fab040;--paused:#7b8596;--ana:#70d0f8;--end:#66db8c;--draft:#94a3b8;--bad:#e05252;--warn:#fbbf24;--cross:#a78bfa;
   --ink-on:#0f172a;--side:#0b1120;--head:#0f172a;--shadow:0 1px 3px rgba(0,0,0,.35);
   --sans:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"Geist Mono",ui-monospace,Consolas,monospace;
 }
 [data-theme=light]{
   --bg:#f4f7fb;--panel:#ffffff;--panel2:#f1f5f9;--line:#e2e8f0;--tx:#0f172a;--mut:#64748b;--acc:#0f172a;--acc-tx:#ffffff;
-  --live:#fab040;--paused:#64748b;--ana:#70d0f8;--end:#66db8c;--draft:#94a3b8;--bad:#b42e2e;--warn:#b45309;
+  --live:#fab040;--paused:#64748b;--ana:#70d0f8;--end:#66db8c;--draft:#94a3b8;--bad:#b42e2e;--warn:#b45309;--cross:#7c3aed;
   --side:#003366;--head:#0f172a;--shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
 }
 *{box-sizing:border-box}
@@ -81,6 +81,30 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .stat span{color:var(--mut);font-size:11.5px;line-height:1.25;display:block}
 .stat.click{cursor:pointer}.stat.click:hover{border-color:var(--acc)}
 .stat.alert b{color:var(--bad)}
+/* tema oscuro: tarjetas de cabecera y leyenda más claras que el fondo, con borde visible (la sombra no se aprecia sobre fondo oscuro) */
+html:not([data-theme=light]) .stat,html:not([data-theme=light]) .legend{background:#1b2740;border-color:#41557a;box-shadow:0 0 0 1px rgba(255,255,255,.03),0 2px 8px rgba(0,0,0,.45)}
+html:not([data-theme=light]) .stat span{color:#bccbe0}
+html:not([data-theme=light]) .stat.click:hover{border-color:var(--acc);background:#22314f}
+html:not([data-theme=light]) .stat.alert b{color:#ff7b7b}
+html:not([data-theme=light]) .stat.alert.cross b{color:#b9a3ff}
+html:not([data-theme=light]) .legend{color:#bccbe0}
+/* tema oscuro: cabeceras de paso, celdas de la matriz y Gantt con la misma separación del fondo */
+html:not([data-theme=light]) .mx .h,html:not([data-theme=light]) .gh,html:not([data-theme=light]) .gh .gl{background:#243455}
+html:not([data-theme=light]) .mx .h:first-child{background:transparent}
+html:not([data-theme=light]) .mx .h{border:1px solid #41557a;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+html:not([data-theme=light]) .cell{background:#1b2740;border-color:#41557a;box-shadow:0 0 0 1px rgba(255,255,255,.03),0 2px 8px rgba(0,0,0,.45)}
+html:not([data-theme=light]) .cell.gap{background:transparent;border-color:#6b7f9e;box-shadow:none}
+html:not([data-theme=light]) .cell.na{background:transparent;border-color:#33466a;box-shadow:none;color:#6f84a6}
+html:not([data-theme=light]) .cell.off{background:transparent;box-shadow:none}
+html:not([data-theme=light]) .cw:hover .cell{border-color:var(--acc)}
+html:not([data-theme=light]) .slot.empty{border-color:#41557a}
+html:not([data-theme=light]) .mini span{background:#243455;border-color:#41557a;color:#bccbe0}
+html:not([data-theme=light]) .gwrap{border-color:#41557a;background:#1b2740}
+html:not([data-theme=light]) .gl{background:#1b2740}
+html:not([data-theme=light]) .gr{border-top-color:#33466a}
+html:not([data-theme=light]) .mx .grp{border-top-color:#33466a;color:#9fb2cf}
+.stat.alert.cross b{color:var(--cross)}
+.it[data-lane]{cursor:pointer}.it[data-lane]:hover{border-color:var(--acc)}
 #view{flex:1;overflow:auto;padding:12px 24px 16px;min-height:0}
 #dock{border-top:1px solid var(--line);background:var(--panel);padding:8px 24px}
 #dock summary{padding:0}
@@ -102,7 +126,7 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0}
 .rl small{color:var(--mut);display:block;font-size:11px}
 .cell{border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);border-radius:12px;padding:8px;min-height:92px;display:flex;flex-direction:column;gap:4px;cursor:pointer;position:relative}
 .cell:hover{border-color:var(--acc)}
-.cell.na{background:transparent;border:1px dashed var(--line);color:var(--mut);align-items:center;justify-content:center;cursor:default;font-size:11px;opacity:.7}
+.cell.na{background:transparent;border:1px dashed color-mix(in srgb,var(--line) 70%,transparent);color:color-mix(in srgb,var(--mut) 70%,transparent);align-items:center;justify-content:center;cursor:default;font-size:11px}
 .cell.gap{border:1px dashed var(--mut);background:transparent}
 .cell.gap .gaptx{color:var(--mut);font-size:11px;margin:auto;text-align:center}
 .cell.off{border:1px dashed var(--warn)}
@@ -144,6 +168,16 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 .mini .lo{background:transparent;border-color:transparent;opacity:.55}
 .sub{font:600 9.5px var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--mut)}
 .conf{outline:2px solid var(--bad);outline-offset:-2px}
+/* solape entre pasos consecutivos de la misma línea: violeta; si además solapa en su carril, rojo dentro y anillo violeta fuera */
+.xconf{outline:2px solid var(--cross);outline-offset:-2px}
+.conf.xconf{outline-color:var(--bad);box-shadow:0 0 0 2px var(--cross)}
+.cross{color:var(--cross)}
+/* test transversal live: barra propia encima de cada fila de la matriz (no toca las tarjetas); cubre todas las columnas que afecta y lleva el nombre una sola vez */
+.xb{grid-column:2/-1;align-self:end;margin-bottom:-4px;height:18px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:9px;background:color-mix(in srgb,var(--c) 12%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 28%,transparent);color:var(--mut);font:500 10.5px var(--sans);white-space:nowrap;overflow:hidden;cursor:pointer;min-width:0}
+.xb .xk{flex:none;opacity:.8}
+.xb .xt{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.xb .xd{flex:none;font:600 9.5px var(--mono);opacity:.75}
+.xb:hover{background:color-mix(in srgb,var(--c) 22%,var(--panel));color:var(--tx)}
 /* ---------- gantt ---------- */
 .gwrap{border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);background:var(--panel);overflow:auto;max-height:100%;position:relative}
 .gbody{position:relative}
@@ -157,7 +191,12 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 .gl small{color:var(--mut);font-size:11px}
 .gl .tags{display:flex;gap:4px;margin-top:2px}
 .gl .tg{font-size:10px;border-radius:4px;padding:0 5px;border:1px solid var(--line)}
-.gl .tg.bad{color:var(--bad);border-color:var(--bad)}.gl .tg.warn{color:var(--warn);border-color:var(--warn)}
+.gl .tg.bad{color:var(--bad);border-color:var(--bad)}.gl .tg.warn{color:var(--warn);border-color:var(--warn)}.gl .tg.cross{color:var(--cross);border-color:var(--cross)}
+/* Gantt: el test transversal va como una pastilla en la cabecera de cada línea, en su rango de fechas (los carriles quedan limpios) */
+.xpill{position:absolute;top:50%;transform:translateY(-50%);height:18px;display:flex;align-items:center;gap:6px;padding:0 9px;border-radius:9px;background:color-mix(in srgb,var(--c) 14%,var(--panel));border:1px solid color-mix(in srgb,var(--c) 30%,transparent);color:var(--mut);font:500 10.5px var(--sans);white-space:nowrap;overflow:hidden;z-index:2;cursor:pointer}
+.xpill .xt{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.xpill .xk{flex:none;opacity:.8}
+.xpill:hover{background:color-mix(in srgb,var(--c) 24%,var(--panel));color:var(--tx)}
 .gt{position:relative}
 .gh{position:sticky;top:0;z-index:6;display:flex;background:var(--head);border-bottom:1px solid var(--line)}
 .gh .gl{background:var(--head);color:#fff;font-weight:600}
@@ -212,7 +251,7 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 <header>
   <button class="btn" id="toggleSide" title="Plegar o desplegar el panel (tecla B)" aria-label="Plegar o desplegar el panel" aria-expanded="true">☰</button>
   <img class="logo" alt="" src="https://assets-manager.abtasty.com/1c94758205a046f98bb061ac07249edb/account/logi-icon-1024x1024.png">
-  <h1>Roadmap de testing</h1>
+  <h1>Pipeline/Roadmap</h1>
   <span class="hsub">CRO Hub · Logitravel · datos del <span id="snap"></span></span>
   <span class="sp"></span>
   <div class="seg" id="viewSeg"><button data-v="matrix">Pipeline</button><button data-v="gantt">Roadmap</button></div>
@@ -304,7 +343,7 @@ function shortName(n) {
 /* ================= configuración (nomenclatura) ================= */
 const DEFAULT_CFG = {
   steps: [
-    {code:'ENT', name:'Entrada',        def:'Punto de entrada previo al funnel: Home, escaparate o landing de Chollos. Puede saltar directo a PDP.'},
+    {code:'ESC', name:'Escaparate',     def:'Escaparate previo al funnel: Home, landing o buscador anterior al listado (categoría o campaña). Puede saltar directo a PDP.'},
     {code:'PLP', name:'Listado',        def:'Listado de resultados tras una búsqueda. Incluye el buscador de Cruceros.'},
     {code:'PDP', name:'Ficha',          def:'Ficha de un crucero, paquete u hotel concreto.'},
     {code:'CFG', name:'Configuración',  def:'Elegir cabina, habitación o fechas dentro de un producto ya abierto.'},
@@ -315,19 +354,20 @@ const DEFAULT_CFG = {
     {code:'WAI', name:'Wait',           def:'Espera y confirmación tras la intención de pago. Termina en Thank You o error de pago.'}
   ],
   lines: [
-    {code:'CRU',  label:'Cruceros',      grp:'L', color:'#2b78d6', hub:'CRU',       steps:['ENT','PLP','PDP','CFG','PRE','CHK','WAI']},
-    {code:'GRV',  label:'Grandes Viajes',grp:'L', color:'#ee6c3a', hub:'GV, GRV',   steps:['ENT','PLP','PDP','CFG','PRE','CHK','WAI']},
-    {code:'PAQ',  label:'Paquetes (V+H)',grp:'L', color:'#1fb27a', hub:'PAQ',       steps:['ENT','PLP','PDP','TRA','XTR','PRE','CHK','WAI']},
-    {code:'TRA',  label:'Transporte',    grp:'L', color:'#eaa000', hub:'TRANS, TRA',steps:['ENT','PLP','PRE','CHK','WAI']},
-    {code:'HOT',  label:'Hoteles',       grp:'L', color:'#e87aa5', hub:'HOT',       steps:['ENT','PLP','PDP','CHK','WAI']},
-    {code:'HOME', label:'Home',          grp:'E', color:'#7c8aa5', hub:'HOME',      steps:['ENT']},
-    {code:'CHO',  label:'Chollos',       grp:'E', color:'#a78bfa', hub:'CHO',       steps:['ENT']},
-    {code:'ESC',  label:'Escaparate',    grp:'E', color:'#22b8cf', hub:'ESC',       steps:['ENT']},
-    {code:'PART', label:'Partnerships',  grp:'E', color:'#94a3b8', hub:'PART',      steps:['ENT','PRE','CHK']},
-    {code:'TODAS',label:'Todas las líneas',grp:'E',color:'#64748b',hub:'TODAS',     steps:['ENT','CHK','WAI']}
+    {code:'CRU',  label:'Cruceros',      grp:'L', color:'#2b78d6', hub:'CRU',       steps:['ESC','PLP','PDP','CFG','PRE','CHK','WAI']},
+    {code:'GRV',  label:'Grandes Viajes',grp:'L', color:'#ee6c3a', hub:'GV, GRV',   steps:['ESC','PLP','PDP','CFG','PRE','CHK','WAI']},
+    {code:'PAQ',  label:'Paquetes (V+H)',grp:'L', color:'#1fb27a', hub:'PAQ',       steps:['ESC','PLP','PDP','TRA','XTR','PRE','CHK','WAI']},
+    {code:'TRA',  label:'Transporte',    grp:'L', color:'#eaa000', hub:'TRANS, TRA',steps:['ESC','PLP','PRE','CHK','WAI']},
+    {code:'HOT',  label:'Hoteles',       grp:'L', color:'#e87aa5', hub:'HOT',       steps:['ESC','PLP','PDP','CHK','WAI']},
+    // cross:true = sus tests live cruzan todas las líneas (franja en la matriz, banda en el Gantt)
+    {code:'TRV',  label:'Transversales', grp:'E', color:'#64748b', hub:'TODAS, TRV',steps:['ESC','CHK','WAI'], cross:true},
+    {code:'HOME', label:'Home',          grp:'E', color:'#7c8aa5', hub:'HOME',      steps:['ESC']},
+    {code:'CHO',  label:'Chollos',       grp:'E', color:'#a78bfa', hub:'CHO',       steps:['ESC']},
+    {code:'ESC',  label:'Escapadas',     grp:'E', color:'#22b8cf', hub:'ESC',       steps:['ESC']},   // pendiente: mapeo completo de su funnel
+    {code:'PART', label:'Partnerships',  grp:'E', color:'#94a3b8', hub:'PART',      steps:['ESC','PRE','CHK']}
   ],
   pages: [
-    {hub:'Home',                 step:'ENT', exc:''},
+    {hub:'Home',                 step:'ESC', exc:''},
     {hub:'Listado de producto',  step:'PLP', exc:''},
     {hub:'Ficha de producto',    step:'PDP', exc:''},
     {hub:'Disponibilidad',       step:'CFG', exc:'PAQ=PLP, HOT=PLP, TRA=PLP'},
@@ -342,7 +382,7 @@ const DEFAULT_CFG = {
     {hub:'V+H', code:'V+H'}, {hub:'TTOO', code:'TTOO'}
   ]
 };
-const CFG_KEY = 'cro-roadmap-cfg-v4';   // súbela al cambiar los valores por defecto, para que no pisen una config vieja guardada
+const CFG_KEY = 'cro-roadmap-cfg-v5';   // súbela al cambiar los valores por defecto, para que no pisen una config vieja guardada
 let CFG;
 try { CFG = JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch (e) { CFG = null; }
 if (!CFG) CFG = JSON.parse(JSON.stringify(DEFAULT_CFG));
@@ -353,7 +393,7 @@ const DEF = {view:'matrix', dur:14, back:4, fwd:8, ppd:12, today:'', mercs:[], d
              showPatches:false, showDiscard:false, showEmpty:true, onlyGaps:false};
 const S = JSON.parse(JSON.stringify(DEF));
 S.today = new Date().toISOString().slice(0, 10);
-let TD = 0, ITEMS = [], V = [], BY = {}, UNK = [];
+let TD = 0, ITEMS = [], V = [], BY = {}, UNK = [], CROSS = [], STATD = {};
 
 const PRESETS = [
   {n:'Sprint actual',      d:{view:'matrix'}},
@@ -406,7 +446,7 @@ function build() {
     const dev = (r.disp || []).map(x => x.toUpperCase());
     const sm = (r.tags || []).map(t => String(t).match(/(\d+)\s*-\s*(\d+)/)).find(Boolean);
     return {r, id:r.id, isPatch, s, e, est, cat, overdue, lane:resolve(r), sub:subMap[r.producto] || '', sprint: sm ? sm[1] + '-' + sm[2] : '',
-            merc:r.merc || [], dev, short:shortName(r.nombre), conflict:false,
+            merc:r.merc || [], dev, short:shortName(r.nombre), conflict:false, xconf:false,
             endEff: e == null ? null : (overdue ? TD : e)};
   });
 }
@@ -431,12 +471,44 @@ function group() {
   V = ITEMS.filter(pass);
   BY = {}; UNK = [];
   V.forEach(it => { if (it.lane.un) UNK.push(it); else (BY[it.lane.key] = BY[it.lane.key] || []).push(it); });
+  const act = arr => (arr || []).filter(i => !i.isPatch && i.s != null && ['live','paused','planned'].includes(i.cat));
   Object.values(BY).forEach(arr => {
-    const f = arr.filter(i => !i.isPatch && i.s != null && ['live','paused','planned'].includes(i.cat));
+    const f = act(arr);
     for (let i = 0; i < f.length; i++) for (let j = i + 1; j < f.length; j++)
       if (overlaps(f[i], f[j])) f[i].conflict = f[j].conflict = true;
   });
+  // Solape entre pasos consecutivos de la misma línea (solo pasos visibles): el mismo usuario puede caer en los dos tests en una sesión
+  CFG.lines.forEach(L => {
+    const st = L.steps.filter(c => !S.hideSteps.includes(c));
+    for (let k = 0; k + 1 < st.length; k++) {
+      const a = act(BY[L.code + '|' + st[k]]), b = act(BY[L.code + '|' + st[k + 1]]);
+      a.forEach(x => b.forEach(y => { if (overlaps(x, y)) x.xconf = y.xconf = true; }));
+    }
+  });
+  CROSS = crossItems();
 }
+/* Tests transversales: los de una línea con cross:true (TRV) que están live o pausados.
+   Si el Hub los tiene en el escaparate (primer paso) se consideran de todo el funnel; en otra página, solo de ese paso. */
+function crossItems() {
+  const cl = CFG.lines.filter(l => l.cross);
+  if (!cl.length) return [];
+  const first = CFG.steps.length ? CFG.steps[0].code : '';
+  return V.filter(i => !i.isPatch && !i.lane.un && cl.some(l => l.code === i.lane.line) && (i.cat === 'live' || i.cat === 'paused'))
+    .map(i => ({it:i, all:i.lane.step === first, color:cl.find(l => l.code === i.lane.line).color}));
+}
+// transversales que tocan un carril, sin contar el carril propio del test (ahí ya sale como píldora o barra)
+const crossFor = (lineCode, stepCode) => CROSS.filter(c => (c.all || c.it.lane.step === stepCode) && !(c.it.lane.line === lineCode && c.it.lane.step === stepCode));
+const crossTip = c => { const i = c.it; return `Transversal · ${i.r.codigo} · ${i.short} · ${i.cat === 'paused' ? 'pausado' : 'día ' + (TD - i.s + 1)} · ${devLab(i).txt}${c.all ? ' · todo el funnel' : ''}`; };
+// barras de la matriz: una por transversal y fila (salvo en la fila del propio test); si afecta a todo el funnel cubre todas las columnas, si no, solo la de su paso
+const crossBars = L => {
+  const vs = visSteps().map(s => s.code);
+  return CROSS.filter(c => c.it.lane.line !== L.code && (c.all || vs.includes(c.it.lane.step))).map(c => {
+    const col = c.all ? '2 / -1' : String(vs.indexOf(c.it.lane.step) + 2);
+    const day = c.it.cat === 'paused' ? 'pausado' : 'd' + (TD - c.it.s + 1);
+    return `<div class="xb" data-k="${esc(c.it.lane.key)}" data-id="${c.it.id}" style="--c:${c.color};grid-column:${col}" title="${esc(crossTip(c))}"><span class="xk">↔</span><span class="xt">Transversal · ${esc(c.it.short)}</span><span class="xd">${day}</span></div>`;
+  }).join('');
+};
+const confCls = i => (i.conflict ? ' conf' : '') + (i.xconf ? ' xconf' : '');
 
 /* ================= helpers de vista ================= */
 const stepOf = c => CFG.steps.find(s => s.code === c);
@@ -468,8 +540,8 @@ function devLab(i) {
 const badges = i => { const d = devLab(i); return `<div class="pb"><span class="dv ${d.cls}" title="${esc(d.tip)}">${esc(d.txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}</div>`; };
 function pillLive(i) {
   const n = TD - i.s + 1, tot = i.endEff != null && !i.overdue ? i.e - i.s + 1 : S.dur;
-  const day = i.cat === 'paused' ? `<span class="pausetag">PAUSADO</span>` : i.overdue ? `<span class="od">+${n - S.dur}d sobre plan</span>` : `d${n}/${tot}`;
-  return `<div class="pill ${i.cat}${i.conflict ? ' conf' : ''}"><div class="t"><span>${esc(i.r.codigo)}</span><span>${day}</span></div>
+  const day = i.cat === 'paused' ? `<span class="pausetag">PAUSADO</span>` : i.overdue ? `d${n}` : `d${n}/${tot}`;
+  return `<div class="pill ${i.cat}${confCls(i)}"><div class="t"><span>${esc(i.r.codigo)}</span><span>${day}</span></div>
     <div class="n">${esc(i.short)}</div>${badges(i)}</div>`;
 }
 function cellHTML(L, st) {
@@ -482,7 +554,7 @@ function cellHTML(L, st) {
   const gap = isGap(ls);
   let h = '';
   const mini = [];   // contadores: van por fuera del recuadro
-  const pillNext = i => `<div class="pill next${i.conflict ? ' conf' : ''}"><div class="t"><span>▶ ${fmt(i.s)}</span><span>${esc(i.r.codigo)}</span></div>
+  const pillNext = i => `<div class="pill next${confCls(i)}"><div class="t"><span>▶ ${fmt(i.s)}</span><span>${esc(i.r.codigo)}</span></div>
       <div class="n">${esc(i.short)}</div>${badges(i)}</div>`;
   if (gap) {
     if (applies) h += `<div class="gaptx">Hueco<br>sin test live ni planificado</div>`;
@@ -497,7 +569,7 @@ function cellHTML(L, st) {
       <div class="slot${bot ? '' : ' empty'}">${bot ? (bot.live ? pillLive(bot.live) : pillNext(bot.plan)) : 'Sin siguiente planificado'}</div></div>`;
     if (strip) {
       const d = devLab(strip);
-      h += `<div class="nextline${strip.conflict ? ' conf' : ''}" title="${esc(strip.r.codigo + ' · ' + strip.r.nombre)}"><span class="d">▶ ${fmt(strip.s)}</span>
+      h += `<div class="nextline${confCls(strip)}" title="${esc(strip.r.codigo + ' · ' + strip.r.nombre)}"><span class="d">▶ ${fmt(strip.s)}</span>
         <span class="n">${esc(strip.short)}</span><span class="dv ${d.cls}" title="${esc(d.tip)}">${esc(d.txt)}</span></div>`;
     }
     if (ls.live.length > shownLive) mini.push(`<span>+${ls.live.length - shownLive} live</span>`);
@@ -518,16 +590,18 @@ function renderMatrix() {
   let h = `<div class="legend"><span><i style="background:var(--live)"></i>Live</span><span><i style="background:var(--paused)"></i>Pausado</span><span><i style="background:transparent;border:1px dashed var(--draft)"></i>Siguiente planificado</span>
     <span><i style="background:transparent;border:1px dashed var(--mut)"></i>Hueco</span><span><i style="background:transparent;border:1px dashed var(--warn)"></i>Fuera de matriz</span>
     <span><i style="outline:2px solid var(--bad);background:transparent"></i>Solape (mismo mercado y dispositivo)</span>
+    <span><i style="outline:2px solid var(--cross);background:transparent"></i>Solape entre pasos consecutivos</span>
+    <span><i style="height:7px;border-radius:2px;background:color-mix(in srgb,#64748b 13%,var(--panel));border:1px solid color-mix(in srgb,#64748b 35%,transparent)"></i>Barra encima de la fila = test transversal live${CROSS.length ? ': ' + CROSS.map(c => esc(c.it.short)).join(', ') : ''}</span>
     <span><span class="dv des">DES</span> <span class="dv mob">MOB</span> <span class="dv tab">TAB</span> <span class="dv multi">DES+MOB</span> <span class="dv all">ALL</span> dispositivo del test</span>
     <span>Pulsa una celda para ver el detalle</span></div>`;
   h += `<div class="mx" style="grid-template-columns:minmax(150px,176px) repeat(${cols},minmax(164px,1fr))"><div class="h"></div>`;
   visSteps().forEach(s => h += `<div class="h" title="${esc(s.def)}"><b>${esc(s.code)}</b>${esc(s.name)}</div>`);
-  [['L','Líneas de negocio'],['E','Entradas y transversales']].forEach(([g, title]) => {
+  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g, title]) => {
     const lines = CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code));
     if (!lines.length) return;
     h += `<div class="grp">${title}</div>`;
     lines.forEach(L => {
-      h += `<div class="rl"><span class="tag" style="background:${L.color}">${esc(L.code)}</span><div>${esc(L.label)}</div></div>`;
+      h += crossBars(L) + `<div class="rl"><span class="tag" style="background:${L.color}">${esc(L.code)}</span><div>${esc(L.label)}</div></div>`;
       visSteps().forEach(st => h += cellHTML(L, st));
     });
   });
@@ -592,10 +666,10 @@ function renderGantt() {
       if (ti < 0) { ti = tracks.length; tracks.push(0); }
       tracks[ti] = x2;
       const top = 6 + ti * 24;
-      const tip = `${it.r.codigo} · ${it.r.nombre}\n${TIPO[it.r.tipo] || it.r.tipo} · ${CATNAME[it.cat]}${it.s != null ? ' · ' + fmt(it.s) + (it.e != null ? ' → ' + fmt(it.e) + (it.est ? ' (fin estimado)' : '') : '') : ''}${it.overdue ? '\nSigue live pasada la duración prevista' : ''}${it.conflict ? '\n⚠ Solapa con otro test del mismo carril' : ''}`;
+      const tip = `${it.r.codigo} · ${it.r.nombre}\n${TIPO[it.r.tipo] || it.r.tipo} · ${CATNAME[it.cat]}${it.s != null ? ' · ' + fmt(it.s) + (it.e != null ? ' → ' + fmt(it.e) + (it.est ? ' (fin estimado)' : '') : '') : ''}${it.overdue ? '\nSigue live pasada la duración prevista' : ''}${it.conflict ? '\n⚠ Solapa con otro test del mismo carril' : ''}${it.xconf ? '\n⚠ Solapa con un test del paso contiguo de la misma línea' : ''}`;
       if (it.isPatch) bars += `<div class="dia ${it.cat}" data-k="${esc(key)}" data-id="${it.id}" style="left:${x1}px;top:${top + 2}px" title="${esc(tip)}"></div>`;
       else {
-        bars += `<div class="bar ${it.cat}${it.est ? ' est' : ''}${it.conflict ? ' conf' : ''}" data-k="${esc(key)}" data-id="${it.id}" style="left:${x1}px;top:${top}px;width:${w}px" title="${esc(tip)}"><b style="font:700 9.5px ui-monospace,Consolas,monospace;opacity:.8">${esc(devLab(it).txt)}</b> ${esc(it.short)}</div>`;
+        bars += `<div class="bar ${it.cat}${it.est ? ' est' : ''}${confCls(it)}" data-k="${esc(key)}" data-id="${it.id}" style="left:${x1}px;top:${top}px;width:${w}px" title="${esc(tip)}"><b style="font:700 9.5px ui-monospace,Consolas,monospace;opacity:.8">${esc(devLab(it).txt)}</b> ${esc(it.short)}</div>`;
         if (ext) bars += `<div class="ext" style="left:${x1 + w}px;top:${top}px;width:${ext}px"></div>`;
       }
     });
@@ -603,12 +677,13 @@ function renderGantt() {
     const tags = [];
     if (off) tags.push('<span class="tg warn">fuera de matriz</span>');
     if (items.some(i => i.conflict)) tags.push('<span class="tg bad">solape</span>');
+    if (items.some(i => i.xconf)) tags.push('<span class="tg cross">solape pasos</span>');
     if (gap && !off) tags.push('<span class="tg">hueco</span>');
     const empty = items.length ? '' : `<div class="empty">Sin tests en esta ventana${gap && !off ? ' · hueco de testing' : ''}</div>`;
     return `<div class="gr"><div class="gl"><div><b>${esc(st.code)}</b> <small>${esc(st.name)}</small></div><div class="tags">${tags.join('')}</div></div>
       <div class="gt" style="width:${W}px;height:${hgt}px">${bars}${empty}</div></div>`;
   }
-  [['L','Líneas de negocio'],['E','Entradas y transversales']].forEach(([g]) => {
+  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g]) => {
     CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code)).forEach(L => {
       let body = '', n = 0;
       visSteps().forEach(st => {
@@ -619,7 +694,14 @@ function renderGantt() {
         const r = laneRow(L, st, key, items, !applies);
         if (r) { body += r; n += items.filter(i => !i.isPatch).length; }
       });
-      if (body) rows += `<div class="gr ghead" style="--c:${L.color}"><div class="gl">${esc(L.code)} · ${esc(L.label)}</div><div class="gt" style="width:${W}px;height:26px"><span class="empty">${n} tests en ventana</span></div></div>${body}`;
+      if (body) {
+        const vs = visSteps().map(s => s.code);
+        const xp = CROSS.filter(c => c.it.lane.line !== L.code && (c.all || vs.includes(c.it.lane.step))).map(c => {
+          const a = Math.max(c.it.s, t0), b = Math.min(c.it.endEff + 1, t1);
+          return b > a ? `<div class="xpill" data-k="${esc(c.it.lane.key)}" data-id="${c.it.id}" style="--c:${c.color};left:${X(a)}px;width:${(b - a) * ppd}px" title="${esc(crossTip(c))}"><span class="xk">↔</span><span class="xt">Transversal · ${esc(c.it.short)}${c.all ? '' : ' (' + c.it.lane.step + ')'}</span></div>` : '';
+        }).join('');
+        rows += `<div class="gr ghead" style="--c:${L.color}"><div class="gl">${esc(L.code)} · ${esc(L.label)}<small>${n} tests en ventana</small></div><div class="gt" style="width:${W}px;min-height:26px">${xp}</div></div>${body}`;
+      }
     });
   });
   const un = UNK.filter(visible);
@@ -630,7 +712,8 @@ function renderGantt() {
     <span><i style="background:transparent;border:2px dotted var(--mut)"></i>Draft con fecha vencida</span>
     <span><i style="background:var(--live);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.4) 0 4px,transparent 4px 8px)"></i>Fin estimado (${S.dur} d)</span>
     <span><i style="background-image:repeating-linear-gradient(135deg,var(--bad) 0 3px,transparent 3px 7px);border:1px solid var(--bad)"></i>Sigue live tras la duración prevista</span>
-    <span><i style="outline:2px solid var(--bad);background:transparent"></i>Solape</span><span>◆ Parche</span></div>`;
+    <span><i style="outline:2px solid var(--bad);background:transparent"></i>Solape</span><span><i style="outline:2px solid var(--cross);background:transparent"></i>Solape entre pasos consecutivos</span>
+    <span><i style="height:9px;border-radius:5px;background:color-mix(in srgb,#64748b 14%,var(--panel));border:1px solid color-mix(in srgb,#64748b 35%,transparent)"></i>Pastilla en la cabecera de la línea = test transversal live${CROSS.length ? ': ' + CROSS.map(c => esc(c.it.short)).join(', ') : ''}</span><span>◆ Parche</span></div>`;
   $('#view').innerHTML = leg + `<div class="gwrap ${ppd < 8 ? 'narrow' : ''}" id="gwrap"><div class="gbody" style="width:${230 + W}px">
     <div class="gh"><div class="gl">Línea › paso</div><div class="gt" style="width:${W}px">${hm}${hs}${hw}</div></div>${cols}${rows || '<div class="empty" style="padding:20px">Nada que mostrar con estos filtros.</div>'}</div></div>`;
   const gw = $('#gwrap'); gw.scrollLeft = Math.max(0, todayX - gw.clientWidth * 0.3);
@@ -639,23 +722,62 @@ function renderGantt() {
 /* ================= estadísticas ================= */
 function renderStats() {
   const t = fresh(V);
-  const live = t.filter(i => i.cat === 'live').length;
-  const plan = t.filter(i => i.cat === 'planned').length;
-  const over = t.filter(i => i.overdue).length;
-  let gaps = 0, lanes = 0;
+  const live = t.filter(i => i.cat === 'live');
+  const plan = t.filter(i => i.cat === 'planned');
+  const over = t.filter(i => i.overdue);
+  const gapKeys = [];
   CFG.lines.filter(l => l.grp === 'L').forEach(L => L.steps.forEach(sc => {
-    if (sc === 'ENT' || S.hideSteps.includes(sc)) return;
-    lanes++; if (isGap(laneSets(BY[L.code + '|' + sc] || []))) gaps++;
+    if (sc === 'ESC' || S.hideSteps.includes(sc)) return;
+    if (isGap(laneSets(BY[L.code + '|' + sc] || []))) gapKeys.push(L.code + '|' + sc);
   }));
-  const patches = V.filter(i => i.isPatch && i.cat === 'live').length;
+  const lanes = CFG.lines.filter(l => l.grp === 'L').reduce((n, L) => n + L.steps.filter(sc => sc !== 'ESC' && !S.hideSteps.includes(sc)).length, 0);
+  const patches = V.filter(i => i.isPatch && i.cat === 'live');
   const active = V.filter(i => ['live','paused','analyzing','planned','stale','backlog'].includes(i.cat));
-  const bad = active.filter(i => i.lane.un || i.lane.off).length;
-  const conf = new Set(V.filter(i => i.conflict).map(i => i.lane.key)).size;
-  const bs = (n, l, extra = '', attr = '') => `<div class="stat ${extra}" ${attr}><b>${n}</b><span>${l}</span></div>`;
-  $('#stats').innerHTML = bs(live, 'tests live') + bs(plan, 'planificados') + bs(`${gaps}<small style="font-size:12px;color:var(--mut)"> / ${lanes}</small>`, 'carriles sin test (sin ENT)')
-    + bs(over, `live pasados de ${S.dur} d`, over ? 'alert' : '') + bs(conf, 'carriles con solape', conf ? 'alert' : '') + bs(patches, 'parches activos')
-    + bs(bad, 'sin clasificar / fuera de matriz', 'click' + (bad ? ' alert' : ''), 'id="auditStat"');
-  $('#auditStat').onclick = openAudit;
+  const bad = active.filter(i => i.lane.un || i.lane.off);
+  const confI = V.filter(i => i.conflict), xconfI = V.filter(i => i.xconf);
+  const conf = new Set(confI.map(i => i.lane.key)).size, xconf = new Set(xconfI.map(i => i.lane.key)).size;
+  STATD = {
+    live:   {title:'Tests live', items:live, note:'Tests en marcha ahora, agrupados por carril (línea › paso).'},
+    plan:   {title:'Planificados', items:plan, note:'Borradores con fecha de inicio futura, por carril.'},
+    gaps:   {title:'Carriles sin test', keys:gapKeys, note:`Carriles aplicables sin test live ni planificado (${gapKeys.length} de ${lanes}, sin contar ESC). Pulsa uno para ver su detalle.`},
+    over:   {title:`Live pasados de ${S.dur} d`, items:over.slice().sort((a, b) => a.s - b.s), flat:true, note:'Siguen live pasada la duración prevista. Van de más a menos días en marcha.'},
+    conf:   {title:'Carriles con solape', items:confI, note:'Tests del mismo carril que coinciden en fechas, mercado y dispositivo.'},
+    xconf:  {title:'Carriles con solape entre pasos', items:xconfI, note:'Tests de la misma línea en pasos consecutivos del funnel que coinciden en fechas, mercado y dispositivo: el mismo usuario puede caer en los dos en una sesión.'},
+    patches:{title:'Parches activos', items:patches, note:'Cambios permanentes en producción; no cuentan como test activo.'}
+  };
+  const bs = (id, n, l, extra = '') => `<div class="stat click ${extra}" data-stat="${id}" title="Pulsa para ver el detalle"><b>${n}</b><span>${l}</span></div>`;
+  $('#stats').innerHTML = bs('live', live.length, 'tests live') + bs('plan', plan.length, 'planificados')
+    + bs('gaps', `${gapKeys.length}<small style="font-size:12px;color:var(--mut)"> / ${lanes}</small>`, 'carriles sin test (sin ESC)')
+    + bs('over', over.length, `live pasados de ${S.dur} d`, over.length ? 'alert' : '') + bs('conf', conf, 'carriles con solape', conf ? 'alert' : '')
+    + bs('xconf', xconf, 'carriles con solape entre pasos', xconf ? 'alert cross' : '') + bs('patches', patches.length, 'parches activos')
+    + bs('audit', bad.length, 'sin clasificar / fuera de matriz', bad.length ? 'alert' : '');
+  document.querySelectorAll('#stats .stat').forEach(el => el.onclick = () => el.dataset.stat === 'audit' ? openAudit() : openStat(el.dataset.stat));
+}
+// Detalle de un KPI de cabecera en el panel lateral
+function laneName(key) {
+  const [lc, sc] = key.split('|'), L = CFG.lines.find(l => l.code === lc), st = stepOf(sc);
+  return `${esc(lc)}${L ? ' ' + esc(L.label) : ''} › ${esc(sc)}${st ? ' ' + esc(st.name) : ''}`;
+}
+function laneOrder(key) {
+  const [lc, sc] = key.split('|');
+  return CFG.lines.findIndex(l => l.code === lc) * 100 + CFG.steps.findIndex(s => s.code === sc);
+}
+function openStat(id) {
+  const d = STATD[id]; if (!d) return;
+  let body = `<div class="note">${d.note}</div>`;
+  if (d.keys) {
+    body += d.keys.length ? d.keys.sort((a, b) => laneOrder(a) - laneOrder(b)).map(k => {
+      const ls = laneSets(BY[k] || []), pend = ls.back.concat(ls.stale);
+      const meta = [pend.length ? `${pend.length} backlog/aprobados sin fecha` : '', ls.ended.length ? `${ls.ended.length} finalizados` : ''].filter(Boolean).join(' · ');
+      return `<div class="it" data-lane="${esc(k)}"><b>${laneName(k)}</b><div class="mt">${meta || 'Sin nada pendiente'}</div></div>`;
+    }).join('') : '<div class="it">Ninguno.</div>';
+  } else if (!d.items.length) body += '<div class="it">Ninguno con los filtros actuales.</div>';
+  else if (d.flat) body += d.items.map(i => `<h4>${laneName(i.lane.key)}</h4>` + itemHTML(i)).join('');
+  else {
+    const g = {}; d.items.forEach(i => (g[i.lane.key] = g[i.lane.key] || []).push(i));
+    Object.keys(g).sort((a, b) => laneOrder(a) - laneOrder(b)).forEach(k => body += `<h4>${laneName(k)} · ${g[k].length}</h4>` + g[k].sort((a, b) => (a.s || 0) - (b.s || 0)).map(i => itemHTML(i)).join(''));
+  }
+  openDrawer(`${esc(d.title)}${d.items ? ' · ' + d.items.length : ''}`, body);
 }
 
 /* ================= drawer ================= */
@@ -668,7 +790,7 @@ function itemHTML(i, hl) {
   if (i.r.tags && i.r.tags.length) meta.push(i.r.tags.join(' '));
   return `<div class="it${hl === i.id ? ' hl' : ''}" id="it-${i.id}"><div class="top"><span class="code">${esc(i.r.codigo)}</span>
     <span class="st ${i.cat}">${CATNAME[i.cat]}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span><span class="dv ${devLab(i).cls}">${esc(devLab(i).txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}
-    ${i.overdue ? '<span class="bad">· sigue live pasada la duración</span>' : ''}${i.conflict ? '<span class="bad">· solape</span>' : ''}</div>
+    ${i.overdue ? '<span class="bad">· sigue live pasada la duración</span>' : ''}${i.conflict ? '<span class="bad">· solape</span>' : ''}${i.xconf ? '<span class="cross">· solape entre pasos</span>' : ''}</div>
     <div class="nm">${esc(i.r.nombre)}</div><div class="mt">${esc(meta.join(' · '))}</div>
     ${i.lane.why ? `<div class="mt warn">⚠ ${esc(i.lane.why)}</div>` : ''}${runningInfo(i)}</div>`;
 }
@@ -726,12 +848,14 @@ function updatePrompt() {
   const p = [];
   p.push(`Rediseña en el CRO Hub de Logitravel la vista "Timeline de iniciativas" del Overview. Hoy agrupa por iniciativa o línea y las fechas no se entienden; quiero un roadmap de testing que muestre qué test está activo en cada paso del funnel de cada línea, cuánto dura y cuál viene después.`);
   p.push(`Estructura: cada carril es una línea de negocio × un paso canónico del funnel (${visSteps().map(s => stepName(s.code)).join(', ')}). Solo se dibujan los carriles que aplican a la línea:\n` +
-    L.map(l => `- ${l.code} (${l.label}): ${l.steps.filter(c => !S.hideSteps.includes(c)).join(' ')}`).join('\n') + `\nAdemás, filas aparte de entradas y transversales: ` + E.map(l => `${l.code} (${l.steps.filter(c => !S.hideSteps.includes(c)).join(' ')})`).join('; ') + `.`
+    L.map(l => `- ${l.code} (${l.label}): ${l.steps.filter(c => !S.hideSteps.includes(c)).join(' ')}`).join('\n') + `\nAdemás, filas aparte de transversales y entradas: ` + E.map(l => `${l.code} (${l.steps.filter(c => !S.hideSteps.includes(c)).join(' ')})`).join('; ') + `.`
     + (S.hideSteps.length ? `\nPor ahora NO se muestra el paso ${S.hideSteps.map(stepName).join(', ')}: ocúltalo de la vista pero deja preparado el mapeo para activarlo más adelante.` : ''));
   p.push(`Mapeo desde los campos actuales del Hub: lineaNegocio → ` + CFG.lines.map(l => `${l.hub.replace(/\s/g, '')}→${l.code}`).join(', ')
     + `. tipoPagina → paso: ` + CFG.pages.map(x => `${x.hub}→${x.step || '(sin paso)'}${x.exc ? ` [excepciones ${x.exc}]` : ''}`).join('; ')
     + `. Sublínea desde el campo producto: ` + CFG.subs.map(x => `${x.hub}→${x.code}`).join(', ') + `.`);
-  p.push(`Dos modos con conmutador. (1) "Pipeline": matriz línea × paso; cada celda muestra el test live (código, nombre corto, día n de N, aviso si pasa de la duración prevista), el siguiente planificado con su fecha de inicio, y tres contadores discretos: backlog (drafts pendientes de aprobar), aprobados (drafts aprobados sin fecha futura) y parches, estos últimos con menos peso visual; una celda sin live ni planificado se marca como hueco; clic abre el detalle del carril. (2) "Roadmap": Gantt con un carril por fila agrupado por línea, eje en semanas con bandas de sprint de 2 semanas (las etiquetas de sprint del Hub, p. ej. "Week 42-43" o "Sprint 40-41", agrupan los tests por sprint; añade un filtro por sprint), línea de hoy, y barras coloreadas por estado (Draft, Live, Paused, Analyzing, Ended). Si dos tests del mismo carril se solapan y comparten mercado y dispositivo, se marcan ambos como solape.`);
+  p.push(`Dos modos con conmutador. (1) "Pipeline": matriz línea × paso; cada celda muestra el test live (código, nombre corto, día n de N, aviso si pasa de la duración prevista), el siguiente planificado con su fecha de inicio, y tres contadores discretos: backlog (drafts pendientes de aprobar), aprobados (drafts aprobados sin fecha futura) y parches, estos últimos con menos peso visual; una celda sin live ni planificado se marca como hueco; clic abre el detalle del carril. (2) "Roadmap": Gantt con un carril por fila agrupado por línea, eje en semanas con bandas de sprint de 2 semanas (las etiquetas de sprint del Hub, p. ej. "Week 42-43" o "Sprint 40-41", agrupan los tests por sprint; añade un filtro por sprint), línea de hoy, y barras coloreadas por estado (Draft, Live, Paused, Analyzing, Ended). Si dos tests del mismo carril se solapan y comparten mercado y dispositivo, se marcan ambos como solape. Y si dos tests de la misma línea en pasos consecutivos del funnel coinciden en fechas, mercado y dispositivo, se marcan ambos como "solape entre pasos" con un color distinto (el mismo usuario puede caer en los dos en una sesión).`);
+  const cl = CFG.lines.filter(l => l.cross);
+  if (cl.length) p.push(`Tests transversales: los de la línea ${cl.map(l => `${l.code} (${l.hub.replace(/\s/g, '')})`).join(', ')} cruzan todas las líneas. Si el Hub los tiene en el escaparate (${CFG.steps[0].code}) se consideran de todo el funnel; en otra página, solo de ese paso. Mientras estén live o pausados, cada fila de la matriz lleva encima una barra fina y tenue, aparte de las tarjetas, con el nombre del test (cubre las columnas que afecta) y en el Roadmap una pastilla tenue en la cabecera de cada línea, en el rango de fechas del test (los carriles quedan limpios), con tooltip y clic al detalle; el test completo solo se muestra en su propio carril.`);
   p.push(`Reglas de datos: los tests A/B y de personalización sin fechaFin usan una duración estimada de ${S.dur} días y se pintan rayados; si siguen LIVE pasada esa duración se marcan como "sobre plan". Los parches (tipo PATCH) son cambios permanentes: no tienen duración, se muestran como rombo o contador y no cuentan como test activo. "Siguiente" = el borrador aprobado con fechaInicio futura más cercana; los borradores con fecha pasada se listan como "fecha vencida" y los que no tienen fecha, como backlog. Los registros descartados se ocultan por defecto. Los registros sin línea o con página sin paso van a un carril "Sin clasificar" visible, no se descartan en silencio.`);
   const ch = [];
   if (S.view !== DEF.view) ch.push(`vista inicial: ${S.view === 'gantt' ? 'Roadmap' : 'matriz'}`);
@@ -817,6 +941,7 @@ function bind() {
     Object.assign(S, JSON.parse(JSON.stringify(DEF)), p.d); S.today = today;
     syncControls(); renderMain(); if (p.audit) openAudit(); else closeDrawer();
   };
+  $('#drawer').addEventListener('click', e => { const l = e.target.closest('[data-lane]'); if (l) openLane(l.dataset.lane); });
   $('#view').onclick = e => {
     const el = e.target.closest('[data-k]'); if (!el) return;
     openLane(el.dataset.k, el.dataset.id);
@@ -853,7 +978,7 @@ function renderEditors() {
     if (sp) { const l = CFG.lines[+sp.parentNode.dataset.ls], c = sp.dataset.s, i = l.steps.indexOf(c); i < 0 ? l.steps.push(c) : l.steps.splice(i, 1);
       l.steps.sort((a, b) => CFG.steps.findIndex(s => s.code === a) - CFG.steps.findIndex(s => s.code === b)); sp.classList.toggle('on'); changed(); return; }
     const d = e.target.closest('[data-dl]'); if (d) { CFG.lines.splice(+d.dataset.dl, 1); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); return; }
-    if (e.target.id === 'addLine') { CFG.lines.push({code:'NEW', label:'Nueva línea', grp:'L', color:'#6ea8ff', hub:'', steps:['ENT']}); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); }
+    if (e.target.id === 'addLine') { CFG.lines.push({code:'NEW', label:'Nueva línea', grp:'L', color:'#6ea8ff', hub:'', steps:['ESC']}); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); }
   };
 
   // páginas
