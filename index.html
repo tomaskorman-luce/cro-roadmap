@@ -467,6 +467,12 @@ function overlaps(a, b) {
   const d = allDev(a) || allDev(b) || a.dev.some(x => b.dev.includes(x));
   return m && d;
 }
+// Un test live frente a uno planificado no es solape: se da por hecho que el planificado entrará cuando acabe el live.
+// Solo marcan solape live/pausado entre sí o planificados entre sí.
+function clash(a, b) {
+  if ((a.cat === 'planned') !== (b.cat === 'planned')) return false;
+  return overlaps(a, b);
+}
 function group() {
   V = ITEMS.filter(pass);
   BY = {}; UNK = [];
@@ -475,14 +481,14 @@ function group() {
   Object.values(BY).forEach(arr => {
     const f = act(arr);
     for (let i = 0; i < f.length; i++) for (let j = i + 1; j < f.length; j++)
-      if (overlaps(f[i], f[j])) f[i].conflict = f[j].conflict = true;
+      if (clash(f[i], f[j])) f[i].conflict = f[j].conflict = true;
   });
   // Solape entre pasos consecutivos de la misma línea (solo pasos visibles): el mismo usuario puede caer en los dos tests en una sesión
   CFG.lines.forEach(L => {
     const st = L.steps.filter(c => !S.hideSteps.includes(c));
     for (let k = 0; k + 1 < st.length; k++) {
       const a = act(BY[L.code + '|' + st[k]]), b = act(BY[L.code + '|' + st[k + 1]]);
-      a.forEach(x => b.forEach(y => { if (overlaps(x, y)) x.xconf = y.xconf = true; }));
+      a.forEach(x => b.forEach(y => { if (clash(x, y)) x.xconf = y.xconf = true; }));
     }
   });
   CROSS = crossItems();
