@@ -788,16 +788,10 @@ function openStat(id) {
 
 /* ================= drawer ================= */
 function itemHTML(i, hl) {
-  const meta = [];
-  meta.push(i.s != null ? (i.isPatch ? 'desde ' + fmt(i.s) : `${fmt(i.s)} → ${fmt(i.e)}${i.est ? ' (est.)' : ''}`) : 'sin fecha');
-  meta.push(i.merc.length ? i.merc.join(' ') : 'mercado sin indicar');
-  meta.push(i.dev.length ? [...new Set(i.dev)].map(d => DEVAB[d] || d.slice(0, 3)).join('+') : 'dispositivo sin indicar');
-  if (i.r.ice != null) meta.push('ICE ' + i.r.ice);
-  if (i.r.tags && i.r.tags.length) meta.push(i.r.tags.join(' '));
   return `<div class="it${hl === i.id ? ' hl' : ''}" id="it-${i.id}"><div class="top"><span class="code">${esc(i.r.codigo)}</span>
     <span class="st ${i.cat}">${CATNAME[i.cat]}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span><span class="dv ${devLab(i).cls}">${esc(devLab(i).txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}
     ${i.overdue ? '<span class="bad">· sigue live pasada la duración</span>' : ''}${i.conflict ? '<span class="bad">· solape</span>' : ''}${i.xconf ? '<span class="cross">· solape entre pasos</span>' : ''}</div>
-    <div class="nm">${esc(i.r.nombre)}</div><div class="mt">${esc(meta.join(' · '))}</div>
+    <div class="nm">${esc(i.r.nombre)}</div>
     ${i.lane.why ? `<div class="mt warn">⚠ ${esc(i.lane.why)}</div>` : ''}${runningInfo(i)}</div>`;
 }
 // Ficha del test para los que están en marcha y los siguientes planificados: solo comentarios internos
