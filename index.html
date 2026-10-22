@@ -186,6 +186,13 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 .xb .xt{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .xb .xd{flex:none;font:600 9.5px var(--mono);opacity:.75}
 .xb:hover{background:color-mix(in srgb,var(--c) 22%,var(--panel));color:var(--tx)}
+/* ---------- parches ---------- */
+.pcell{flex:1;display:flex;flex-direction:column;gap:3px;min-height:164px}
+.prow{flex:1;min-height:0;display:flex;align-items:center;gap:8px;padding:3px 7px;border-radius:6px;border-left:4px solid var(--ana);background:color-mix(in srgb,var(--ana) 20%,var(--panel));font-size:11.5px;line-height:1.25}
+.prow .n{flex:1;min-width:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.prow .d{flex:none;font:700 10.5px var(--mono);white-space:nowrap;opacity:.85}
+.prow.more{background:transparent;border:1px dashed var(--line);border-left:4px solid var(--ana);color:var(--mut);justify-content:center;font-size:11px}
+.cell.nopatch{align-items:center;justify-content:center;color:color-mix(in srgb,var(--mut) 75%,transparent);font-size:11px;text-align:center}
 /* ---------- gantt ---------- */
 .gwrap{border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);background:var(--panel);overflow:auto;max-height:100%;position:relative}
 .gbody{position:relative}
@@ -262,7 +269,7 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
   <h1>Pipeline/Roadmap</h1>
   <span class="hsub">CRO Hub · Logitravel · datos del <span id="snap"></span></span>
   <span class="sp"></span>
-  <div class="seg" id="viewSeg"><button data-v="matrix">Pipeline</button><button data-v="gantt">Roadmap</button><button data-v="ux">Estudios UX</button></div>
+  <div class="seg" id="viewSeg"><button data-v="matrix">Pipeline</button><button data-v="gantt">Roadmap</button><button data-v="ux">Estudios UX</button><button data-v="patch">Parches</button></div>
   <button class="btn" id="theme">Claro / oscuro</button>
 </header>
 
@@ -913,7 +920,7 @@ function uxCell(L, st) {
 }
 function renderUx() {
   const cols = visSteps().length;
-  let h = `<div class="legend"><span><i style="background:var(--end)"></i>Análisis hecho (estudios · hipótesis asociadas)</span><span><i style="background:transparent;border:1px dashed var(--draft)"></i>Siguiente estudio por hacer</span><span><i style="background:var(--live)"></i>Estudio en curso</span>
+  let h = `<div class="legend"><span><i style="background:var(--end)"></i>Análisis hecho (estudios · hipótesis asociadas)</span><span><i style="background:var(--live)"></i>Estudio en curso</span><span><i style="background:transparent;border:1px dashed var(--draft)"></i>Siguiente estudio por hacer</span>
     <span><i style="background:transparent;border:1px dashed var(--mut)"></i>Sin análisis</span><span><i style="background:transparent;border:1px dashed var(--warn)"></i>Fuera de matriz</span>
     <span><span class="ty">UX</span> UX Study <span class="ty">UT</span> User Test <span class="ty">MIC</span> Micro Estudio</span>
     <span>“~” = el Hub no tiene fecha y se usa la de alta</span><span>Pulsa una celda para ver los estudios y sus hipótesis</span></div>`;
@@ -1000,6 +1007,112 @@ function openUxLane(key) {
   openDrawer(key === 'UNK' ? 'Sin clasificar' : `${esc(lc)} › ${esc(sc)} ${st ? esc(st.name) : ''}`, body);
 }
 
+/* ================= parches ================= */
+// Misma rejilla línea × paso. Solo parches activos (LIVE): no hay pipeline porque se implementan sin planificar.
+// 1 parche = ocupa toda la celda; 2 = dos mitades; 3 o más = contador y el detalle en el panel lateral.
+let PV = [], PBY = {}, PUNK = [], PSTATD = {};
+function groupPatch() {
+  PV = V.filter(i => i.isPatch && i.cat === 'live');
+  PBY = {}; PUNK = [];
+  PV.forEach(i => { if (i.lane.un) PUNK.push(i); else (PBY[i.lane.key] = PBY[i.lane.key] || []).push(i); });
+  Object.values(PBY).concat([PUNK]).forEach(a => a.sort((x, y) => (y.s ?? -1) - (x.s ?? -1)));   // más recientes primero
+}
+// Los parches vienen como "Parche - ALL|MOB|GV|ALL - Nombre" (o con el prefijo en otro sitio): se deja solo el nombre
+const patchName = i => {
+  let n = i.r.nombre.replace(/^Parche\s*(?:-\s*Partnerships)?\s*-?\s*/i, '');
+  n = (/^(?:[^|]*\|){3}[^|]*?\s-\s+/.test(n) ? n.replace(/^(?:[^|]*\|){3}[^|]*?\s-\s+/, '') : n.replace(/^(?:[^|\s]+\|){3}\S+\s+/, '')).replace(/^Parche\s*-\s*(?:Partnerships\s*-\s*)?/i, '').replace(/^\[BUGFIX\]\s*-\s*/i, '[BUGFIX] ');
+  return n.trim() || i.short;
+};
+const patchAge = i => i.s == null ? 'sin fecha' : (TD - i.s <= 0 ? 'desde hoy' : `desde ${fmt(i.s)} · ${TD - i.s} d`);
+const patchMerc = i => !i.merc.length || i.merc.includes('TODOS') ? 'Todos los mercados' : i.merc.length > 4 ? i.merc.slice(0, 3).join(', ') + ` +${i.merc.length - 3}` : i.merc.join(', ');
+const patchDays = i => i.s == null ? 's/f' : TD - i.s <= 0 ? 'hoy' : (TD - i.s) + ' d';
+// Tarjeta ligera: una fila por parche (nombre limpio + días activo); hasta 4 filas, y con más se muestran 3 y una de "+N más"
+const PMAX = 4;
+function patchRow(i) {
+  return `<div class="prow" title="${esc(i.r.codigo + ' · ' + i.r.nombre + ' · ' + patchAge(i))}"><span class="n">${esc(patchName(i))}</span><span class="d">${patchDays(i)}</span></div>`;
+}
+function patchCell(L, st) {
+  const k = L.code + '|' + st.code, its = PBY[k] || [], applies = L.steps.includes(st.code), n = its.length;
+  if (!applies && !n) return `<div class="cell na">No aplica</div>`;
+  let h = '';
+  if (!n) h = `<div class="gaptx">Sin parches</div>`;
+  else {
+    const shown = n <= PMAX ? its : its.slice(0, PMAX - 1);
+    h = `<div class="pcell">${shown.map(patchRow).join('')}${n > PMAX ? `<div class="prow more">+${n - shown.length} más · ${n} parches</div>` : ''}</div>`;
+  }
+  if (!applies) h += `<div class="offtx">⚠ ${esc(L.code)} no tiene este paso</div>`;
+  const cls = ['cell', n ? '' : 'nopatch', !applies ? 'off' : ''].join(' ');
+  return `<div class="cw" data-p="${esc(k)}"><div class="${cls}">${h}</div></div>`;
+}
+function renderPatch() {
+  const cols = visSteps().length, hid = PV.filter(i => !i.lane.un && S.hideSteps.includes(i.lane.step)).length;
+  let h = `<div class="legend"><span><i style="background:var(--ana)"></i>Parche activo en producción</span>
+    <span>Cada fila = un parche: nombre y días que lleva activo · más recientes primero · hasta 4 por celda; con más, se resume</span>
+    <span><i style="background:transparent;border:1px dashed var(--warn)"></i>Fuera de matriz</span>
+    ${hid ? `<span class="warn">${hid} parche${hid === 1 ? '' : 's'} en pasos ocultos (actívalos en “Pasos visibles”)</span>` : ''}
+    <span>Pulsa una celda para ver el detalle</span></div>`;
+  h += `<div class="mx" style="grid-template-columns:minmax(150px,176px) repeat(${cols},minmax(164px,1fr))"><div class="h"></div>`;
+  visSteps().forEach(s => h += `<div class="h" title="${esc(s.def)}"><b>${esc(s.code)}</b>${esc(s.name)}</div>`);
+  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g, title]) => {
+    const lines = CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code));
+    if (!lines.length) return;
+    h += `<div class="grp">${title}</div>`;
+    lines.forEach(L => {
+      h += `<div class="rl"><span class="tag" style="background:${L.color}">${esc(L.code)}</span><div>${esc(L.label)}</div></div>`;
+      visSteps().forEach(st => h += patchCell(L, st));
+    });
+  });
+  if (PUNK.length) h += `<div class="grp">Sin clasificar (línea o página sin mapear)</div><div class="rl"><span class="tag" style="background:var(--warn)">?</span><div>Revisar</div></div>
+    <div class="cell off" data-p="UNK" style="grid-column:2/-1;min-height:50px;cursor:pointer"><div class="mini"><span>${PUNK.length} parche${PUNK.length === 1 ? '' : 's'}</span></div>
+    <div class="offtx">⚠ Parches sin línea de negocio o sin tipo de página en el Hub (o con una página sin paso).</div></div>`;
+  h += `</div>`;
+  $('#view').innerHTML = h;
+}
+function renderPatchStats() {
+  const lanes = Object.keys(PBY).filter(k => PBY[k].length), lines = new Set(PV.filter(i => !i.lane.un).map(i => i.lane.line));
+  const rec = PV.filter(i => i.s != null && TD - i.s <= 30), bad = PV.filter(i => i.lane.un || i.lane.off);
+  const multi = lanes.filter(k => PBY[k].length > 2);
+  PSTATD = {
+    all:   {title:'Parches activos', items:PV, note:'Parches LIVE en producción, por carril (línea › paso).'},
+    lanes: {title:'Carriles con parche', keys:lanes, note:`Carriles (línea › paso) con al menos un parche activo: ${lanes.length}.`},
+    multi: {title:'Carriles con 3+ parches', keys:multi, note:'Carriles donde se acumulan más de dos parches.'},
+    rec:   {title:'Parches de los últimos 30 días', items:rec, note:'Parches puestos en producción en los últimos 30 días (según la fecha de inicio).'},
+    audit: {title:'Sin clasificar / fuera de matriz', items:bad, flat:true, note:'Parches que no caen en ningún carril: falta la línea o la página en el Hub, o la página no tiene paso en esa línea.'}
+  };
+  const bs = (id, n, l, extra = '') => `<div class="stat click ${extra}" data-pstat="${id}" title="Pulsa para ver el detalle"><b>${n}</b><span>${l}</span></div>`;
+  $('#stats').innerHTML = bs('all', PV.length, 'parches activos') + bs('lanes', lanes.length, `carriles con parche · ${lines.size} líneas`)
+    + bs('multi', multi.length, 'carriles con 3+ parches') + bs('rec', rec.length, 'parches en los últimos 30 d')
+    + bs('audit', bad.length, 'sin clasificar / fuera de matriz', bad.length ? 'alert' : '');
+  document.querySelectorAll('#stats .stat').forEach(el => el.onclick = () => openPatchStat(el.dataset.pstat));
+}
+function patchItemHTML(i) {
+  return `<div class="it"><div class="top"><span class="code">${esc(i.r.codigo)}</span><span class="st ended" style="background:var(--ana)">Parche activo</span>
+    <span class="dv ${devLab(i).cls}">${esc(devLab(i).txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}</div>
+    <div class="nm">${esc(i.r.nombre)}</div><div class="mt">${esc(patchAge(i))} · ${esc(patchMerc(i))}</div>
+    ${i.lane.why ? `<div class="mt warn">⚠ ${esc(i.lane.why)}</div>` : ''}${i.r.com ? runningInfo(i) : ''}</div>`;
+}
+function openPatchStat(id) {
+  const d = PSTATD[id]; if (!d) return;
+  let body = `<div class="note">${d.note}</div>`;
+  if (d.keys) {
+    body += d.keys.length ? d.keys.sort((a, b) => laneOrder(a) - laneOrder(b)).map(k =>
+      `<div class="it" data-plane="${esc(k)}" style="cursor:pointer"><b>${laneName(k)}</b><div class="mt">${PBY[k].length} parche${PBY[k].length === 1 ? '' : 's'}</div></div>`).join('') : '<div class="it">Ninguno.</div>';
+  } else if (!d.items.length) body += '<div class="it">Ninguno con los filtros actuales.</div>';
+  else {
+    const g = {}; d.items.forEach(i => (g[i.lane.key || 'UNK'] = g[i.lane.key || 'UNK'] || []).push(i));
+    Object.keys(g).sort((a, b) => laneOrder(a) - laneOrder(b)).forEach(k => body += `<h4>${k === 'UNK' ? 'Sin clasificar' : laneName(k)} · ${g[k].length}</h4>` + g[k].sort((a, b) => (b.s ?? -1) - (a.s ?? -1)).map(patchItemHTML).join(''));
+  }
+  openDrawer(`${esc(d.title)}${d.items ? ' · ' + d.items.length : ''}`, body);
+}
+function openPatchLane(key) {
+  const its = key === 'UNK' ? PUNK : (PBY[key] || []);
+  const [lc, sc] = key.split('|'), st = stepOf(sc);
+  let body = st ? `<div class="note">${esc(st.def)}</div>` : '';
+  body += its.length ? `<div class="note"><b>${its.length}</b> ${its.length === 1 ? 'parche activo' : 'parches activos'}, del más reciente al más antiguo.</div>` + its.map(patchItemHTML).join('')
+    : `<div class="it">Sin parches activos en este carril.</div>`;
+  openDrawer(key === 'UNK' ? 'Sin clasificar' : `${esc(lc)} › ${esc(sc)} ${st ? esc(st.name) : ''}`, body);
+}
+
 /* ================= prompt ================= */
 function updatePrompt() {
   const L = CFG.lines.filter(l => l.grp === 'L'), E = CFG.lines.filter(l => l.grp === 'E');
@@ -1038,8 +1151,9 @@ function updatePrompt() {
 function renderMain() {
   build(); group();
   if (S.view === 'ux') { buildUx(); groupUx(); renderUxStats(); renderUx(); }
+  else if (S.view === 'patch') { groupPatch(); renderPatchStats(); renderPatch(); }
   else { renderStats(); S.view === 'matrix' ? renderMatrix() : renderGantt(); }
-  $('#dock').style.display = S.view === 'ux' ? 'none' : '';
+  $('#dock').style.display = S.view === 'ux' || S.view === 'patch' ? 'none' : '';
   document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.view));
   updatePrompt();
 }
@@ -1104,10 +1218,12 @@ function bind() {
   };
   $('#drawer').addEventListener('click', e => {
     const l = e.target.closest('[data-lane]'); if (l) return openLane(l.dataset.lane);
-    const u = e.target.closest('[data-ulane]'); if (u) openUxLane(u.dataset.ulane);
+    const u = e.target.closest('[data-ulane]'); if (u) return openUxLane(u.dataset.ulane);
+    const p = e.target.closest('[data-plane]'); if (p) openPatchLane(p.dataset.plane);
   });
   $('#view').onclick = e => {
     if (S.view === 'ux') { const u = e.target.closest('[data-u]'); if (u) openUxLane(u.dataset.u); return; }
+    if (S.view === 'patch') { const p = e.target.closest('[data-p]'); if (p) openPatchLane(p.dataset.p); return; }
     const el = e.target.closest('[data-k]'); if (!el) return;
     openLane(el.dataset.k, el.dataset.id);
   };
