@@ -124,6 +124,12 @@ html:not([data-theme=light]) .mx .grp{border-top-color:#33466a;color:#9fb2cf}
 .rl{display:flex;align-items:center;gap:8px;padding-right:6px}
 .rl .tag{font:700 11px var(--mono);color:#fff;border-radius:6px;padding:3px 7px;min-width:44px;text-align:center}
 .rl small{color:var(--mut);display:block;font-size:11px}
+.rl.child{padding-left:16px;position:relative}
+.rl.child::before{content:'';position:absolute;left:6px;top:50%;width:6px;height:1px;background:var(--line)}
+.rl.child .tag{opacity:.85;min-width:38px}
+.rl .sbt{display:block;margin-top:2px;padding:0;border:0;background:none;color:var(--mut);font:500 10.5px var(--sans);cursor:pointer;text-align:left;opacity:.85}
+.rl .sbt:hover,.gl .sbt:hover{color:var(--tx);opacity:1;text-decoration:underline}
+.gl .sbt{display:block;margin-top:1px;padding:0;border:0;background:none;color:var(--mut);font:500 10.5px var(--sans);cursor:pointer;text-align:left;opacity:.85}
 .cell{border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);border-radius:12px;padding:8px;min-height:92px;display:flex;flex-direction:column;gap:4px;cursor:pointer;position:relative}
 .cell:hover{border-color:var(--acc)}
 .cell.na{background:transparent;border:1px dashed color-mix(in srgb,var(--line) 70%,transparent);color:color-mix(in srgb,var(--mut) 70%,transparent);align-items:center;justify-content:center;cursor:default;font-size:11px}
@@ -308,9 +314,8 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 
   <h3>Nomenclatura</h3>
   <div class="note">Lo que cambies aquí se guarda en tu navegador y re-clasifica todos los registros al instante.</div>
-  <details class="ed"><summary>Líneas y pasos que aplican</summary><div class="in" id="edLines"></div></details>
+  <details class="ed"><summary>Líneas, sublíneas y pasos que aplican</summary><div class="in" id="edLines"></div></details>
   <details class="ed"><summary>Página del Hub → paso del funnel</summary><div class="in" id="edPages"></div></details>
-  <details class="ed"><summary>Sublíneas (campo producto)</summary><div class="in" id="edSubs"></div></details>
   <details class="ed"><summary>Pasos (nombre y definición)</summary><div class="in" id="edSteps"></div></details>
   <div style="margin-top:10px"><button class="btn" id="resetCfg">Restablecer nomenclatura</button></div>
 </aside>
@@ -357,6 +362,10 @@ function shortName(n) {
 }
 
 /* ================= configuración (nomenclatura) ================= */
+const F_CRU = 'ESC PLP PDP CFG PRE CHK WAI', F_PAQ = 'ESC PLP PDP TRA XTR PRE CHK WAI', F_TER = 'PLP PDP CFG CHK WAI', F_TRP = 'ESC PLP CHK WAI',
+  F_HOT = 'ESC PLP PDP CHK WAI', F_EPA = 'ESC PLP PDP XTR PRE CHK WAI', F_ALL = 'ESC PLP PDP CFG TRA XTR PRE CHK WAI';
+// Fila de la nomenclatura con valores por defecto; steps se da como texto separado por espacios
+const R = (code, line, grp, o) => { const r = Object.assign({code, line, grp, main:true, name:'', sub:'', short:'', color:'', hub:'', prod:''}, o); r.steps = r.steps.split(' '); return r; };
 const DEFAULT_CFG = {
   steps: [
     {code:'ESC', name:'Escaparate',     def:'Escaparate previo al funnel: Home, landing o buscador anterior al listado (categoría o campaña). Puede saltar directo a PDP.'},
@@ -369,36 +378,57 @@ const DEFAULT_CFG = {
     {code:'CHK', name:'Checkout',       def:'Pago y datos del cliente.'},
     {code:'WAI', name:'Wait',           def:'Espera y confirmación tras la intención de pago. Termina en Thank You o error de pago.'}
   ],
+  // Una fila por línea o sublínea. code = clave del carril (code|paso); line = línea a la que pertenece (filtro y desplegable);
+  // grp: L líneas, E entradas y transversales, P partners, B otro negocio (Liverpool).
+  // main: fila visible sin desplegar (las demás de su línea cuelgan de un desplegable sutil). Partners y Liverpool se ven siempre.
+  // hub / prod: valores de lineaNegocio y producto del Hub que caen en la fila. Con varias filas en la misma línea del Hub gana la que coincide
+  // en producto; si ninguna, la principal. strict: sin coincidencia de producto no se clasifica (en partners hace falta saber cuál es).
+  // fn: línea del funnel para las excepciones de página (por defecto, line). ter: sublínea de terceros; un test de la línea completa (PAQ) no la incluye.
   lines: [
-    {code:'CRU',  label:'Cruceros',      grp:'L', color:'#2b78d6', hub:'CRU',       steps:['ESC','PLP','PDP','CFG','PRE','CHK','WAI']},
-    {code:'GRV',  label:'Grandes Viajes',grp:'L', color:'#ee6c3a', hub:'GV, GRV',   steps:['ESC','PLP','PDP','CFG','PRE','CHK','WAI']},
-    {code:'PAQ',  label:'Paquetes (V+H)',grp:'L', color:'#1fb27a', hub:'PAQ',       steps:['ESC','PLP','PDP','TRA','XTR','PRE','CHK','WAI']},
-    {code:'TRA',  label:'Transporte',    grp:'L', color:'#eaa000', hub:'TRANS, TRA',steps:['ESC','PLP','PRE','CHK','WAI']},
-    {code:'HOT',  label:'Hoteles',       grp:'L', color:'#e87aa5', hub:'HOT',       steps:['ESC','PLP','PDP','CHK','WAI']},
-    // cross:true = sus tests live cruzan todas las líneas (franja en la matriz, banda en el Gantt)
-    {code:'TRV',  label:'Transversales', grp:'E', color:'#64748b', hub:'TODAS, TRV',steps:['ESC','CHK','WAI'], cross:true},
-    {code:'HOME', label:'Home',          grp:'E', color:'#7c8aa5', hub:'HOME',      steps:['ESC']},
-    {code:'CHO',  label:'Chollos',       grp:'E', color:'#a78bfa', hub:'CHO',       steps:['ESC']},
-    {code:'ESC',  label:'Escapadas',     grp:'E', color:'#22b8cf', hub:'ESC',       steps:['ESC']},   // pendiente: mapeo completo de su funnel
-    {code:'PART', label:'Partnerships',  grp:'E', color:'#94a3b8', hub:'PART',      steps:['ESC','PRE','CHK']}
+    R('CRU', 'CRU', 'L', {name:'Cruceros', color:'#2b78d6', hub:'CRU', steps:F_CRU}),
+    R('GRV_COM', 'GRV', 'L', {name:'Grandes Viajes', sub:'Combinados', short:'COM', color:'#ee6c3a', hub:'GV, GRV', steps:F_CRU}),
+    R('GRV_CIR', 'GRV', 'L', {main:false, name:'Grandes Viajes', sub:'Circuitos', short:'CIR', color:'#ee6c3a', steps:F_CRU}),
+    R('GRV_RUT', 'GRV', 'L', {main:false, name:'Grandes Viajes', sub:'Rutas en coche', short:'RUT', color:'#ee6c3a', steps:F_CRU}),
+    R('PAQ_V+H', 'PAQ', 'L', {name:'Paquetes', sub:'Vuelo + Hotel', short:'V+H', color:'#1fb27a', hub:'PAQ', prod:'V+H', steps:F_PAQ}),
+    R('PAQ_F+H', 'PAQ', 'L', {main:false, name:'Paquetes', sub:'Ferry + Hotel', short:'F+H', color:'#1fb27a', steps:F_PAQ}),
+    R('PAQ_T+H', 'PAQ', 'L', {main:false, name:'Paquetes', sub:'Tren + Hotel', short:'T+H', color:'#1fb27a', steps:F_PAQ}),
+    R('PAQ_CyE', 'PAQ', 'L', {main:false, name:'Paquetes', sub:'Caribe y Exóticos (terceros)', short:'CyE', ter:true, color:'#1fb27a', hub:'PAQ', prod:'TTOO', fn:'PAQ_CyE', steps:F_TER}),
+    R('PAQ_SES', 'PAQ', 'L', {main:false, name:'Paquetes', sub:'Salidas Especiales (terceros)', short:'SES', ter:true, color:'#1fb27a', hub:'PAQ', prod:'TTOO', fn:'PAQ_SES', steps:F_TER}),
+    R('TRP_VUE', 'TRP', 'L', {name:'Transportes', sub:'Vuelos', short:'VUE', color:'#eaa000', hub:'TRANS, TRA', prod:'VUELOS', steps:F_TRP}),
+    R('TRP_TRE', 'TRP', 'L', {main:false, name:'Transportes', sub:'Trenes', short:'TRE', color:'#eaa000', hub:'TRANS, TRA', prod:'TREN', steps:F_TRP}),
+    R('TRP_TRF', 'TRP', 'L', {main:false, name:'Transportes', sub:'Transfers', short:'TRF', color:'#eaa000', steps:F_TRP}),
+    R('TRP_COC', 'TRP', 'L', {main:false, name:'Transportes', sub:'Alquiler coches', short:'COC', color:'#eaa000', steps:F_TRP}),
+    R('TRP_FER', 'TRP', 'L', {main:false, name:'Transportes', sub:'Ferries', short:'FER', color:'#eaa000', hub:'TRANS, TRA', prod:'FERRIES', steps:F_TRP}),
+    R('HOT', 'HOT', 'L', {name:'Hoteles', color:'#e87aa5', hub:'HOT', steps:F_HOT}),
+    R('DIS', 'DIS', 'L', {name:'Disney', color:'#1e3a8a', steps:F_PAQ}),
+    R('EPA', 'EPA', 'L', {name:'Escapadas', color:'#4d8f1f', hub:'ESC', steps:F_EPA}),
+    R('ACT', 'ACT', 'L', {name:'Actividades', color:'#0e8aa3', steps:F_HOT}),
+    R('TRV', 'TRV', 'E', {name:'Transversales', color:'#64748b', hub:'TODAS, TRV', steps:F_ALL, cross:true}),   // cross:true = sus tests live cruzan todas las líneas (franja en la matriz, banda en el Gantt)
+    R('HOM', 'HOM', 'E', {name:'Home', color:'#7c8aa5', hub:'HOME', steps:'ESC'}),
+    R('CHO', 'CHO', 'E', {name:'Chollos', color:'#a78bfa', hub:'CHO', steps:'ESC'}),
+    R('MEL_PAQ_V+H', 'MEL', 'P', {name:'Melia', sub:'Vuelo + Hotel', short:'MEL', color:'#7a5cd6', hub:'PART', prod:'Melia', strict:true, fn:'PAQ', steps:F_PAQ}),
+    R('AIR_PAQ_V+H', 'AIR', 'P', {name:'Air Europa', sub:'Vuelo + Hotel', short:'AIR', color:'#3d5bd9', hub:'PART', prod:'Air Europa', strict:true, fn:'PAQ', steps:F_PAQ}),
+    R('PAW_PAQ_V+H', 'PAW', 'P', {name:'Por Aventura', sub:'Vuelo + Hotel', short:'PAW', color:'#b83fb0', hub:'PART', prod:'PAW', strict:true, fn:'PAQ', steps:F_PAQ}),
+    R('PAW_PAQ_T+H', 'PAW', 'P', {name:'Por Aventura', sub:'Tren + Hotel', short:'PAW', color:'#b83fb0', fn:'PAQ', steps:F_PAQ}),
+    R('BAL_PAQ_F+H', 'BAL', 'P', {name:'Balearia', sub:'Ferry + Hotel', short:'BAL', color:'#0f7fa8', hub:'PART', prod:'Balearia', strict:true, fn:'PAQ', steps:F_PAQ}),
+    R('BAL_HOT', 'BAL', 'P', {name:'Balearia', sub:'Hoteles', short:'BAL', color:'#0f7fa8', fn:'HOT', steps:F_HOT}),
+    R('ELB_PAQ_V+H', 'ELB', 'P', {name:'Elba', sub:'Vuelo + Hotel', short:'ELB', color:'#a0522d', hub:'PART', prod:'Elba', strict:true, fn:'PAQ', steps:F_PAQ}),
+    // Otro negocio: contrata todas las líneas, así que sus pasos son la unión de todos los funnels
+    R('LIV', 'LIV', 'B', {name:'Liverpool', sub:'Todas las líneas', short:'LIV', color:'#16a34a', hub:'PART', prod:'Liverpool', strict:true, steps:F_ALL})
   ],
   pages: [
     {hub:'Home',                 step:'ESC', exc:''},
     {hub:'Listado de producto',  step:'PLP', exc:''},
     {hub:'Ficha de producto',    step:'PDP', exc:''},
-    {hub:'Disponibilidad',       step:'CFG', exc:'PAQ=PLP, HOT=PLP, TRA=PLP'},
+    {hub:'Disponibilidad',       step:'CFG', exc:'PAQ=PLP, HOT=PLP, TRP=PLP'},
     {hub:'Selección de transporte',step:'TRA',exc:''},
     {hub:'Extras',               step:'XTR', exc:''},
     {hub:'Presupuesto',          step:'PRE', exc:''},
     {hub:'Checkout',             step:'CHK', exc:''},
     {hub:'Área personal',        step:'ESC', exc:''}
-  ],
-  subs: [
-    {hub:'VUELOS', code:'VUE'}, {hub:'FERRIES', code:'FER'}, {hub:'TREN', code:'TREN'},
-    {hub:'V+H', code:'V+H'}, {hub:'TTOO', code:'TTOO'}
   ]
 };
-const CFG_KEY = 'cro-roadmap-cfg-v6';   // súbela al cambiar los valores por defecto, para que no pisen una config vieja guardada
+const CFG_KEY = 'cro-roadmap-cfg-v7';   // súbela al cambiar los valores por defecto, para que no pisen una config vieja guardada
 let CFG;
 try { CFG = JSON.parse(localStorage.getItem(CFG_KEY)) || null; } catch (e) { CFG = null; }
 if (!CFG) CFG = JSON.parse(JSON.stringify(DEFAULT_CFG));
@@ -406,7 +436,7 @@ const saveCfg = () => { try { localStorage.setItem(CFG_KEY, JSON.stringify(CFG))
 
 /* ================= estado de la vista ================= */
 const DEF = {view:'matrix', dur:14, back:4, fwd:8, ppd:12, today:'', mercs:[], devs:[], sub:'', line:'', sprint:'', hideSteps:['WAI'],
-             showPatches:false, showDiscard:false, showEmpty:true, onlyGaps:false};
+             showPatches:false, showDiscard:false, showEmpty:true, onlyGaps:false, open:{}};
 const S = JSON.parse(JSON.stringify(DEF));
 S.today = new Date().toISOString().slice(0, 10);
 let TD = 0, ITEMS = [], V = [], BY = {}, UNK = [], CROSS = [], STATD = {};
@@ -420,30 +450,48 @@ const PRESETS = [
 ];
 
 /* ================= clasificación ================= */
-const lineOf = h => CFG.lines.find(l => l.hub.split(',').map(x => x.trim()).includes(h));
-function pageStep(page, lineCode) {
+const laneKeys = l => l.keys || [l.key];
+const hubList = l => (l.hub || '').split(',').map(x => x.trim()).filter(Boolean);
+const prodList = l => (l.prod || '').split(',').map(x => x.trim()).filter(Boolean);
+// Fila de la nomenclatura para un registro del Hub: línea + producto. Entre las filas de la misma línea del Hub gana la que coincide en producto;
+// si ninguna, la principal (las filas strict, como las de partners, exigen coincidencia de producto)
+function rowOf(r) {
+  const cands = CFG.lines.filter(l => hubList(l).includes(r.linea));
+  if (!cands.length) return {why:`Línea "${r.linea}" sin mapear a la nomenclatura`};
+  const byProd = cands.filter(l => r.producto && prodList(l).includes(r.producto));
+  if (byProd.length) return {row:byProd[0], group:byProd.length > 1 ? byProd : null};
+  const loose = cands.filter(l => !l.strict);
+  const def = loose.find(l => l.main) || loose[0];
+  if (def) return {row:def, wide: def.grp === 'L' && CFG.lines.filter(l => l.grp === 'L' && l.line === def.line).length > 1};
+  return {why:`${r.linea}: producto "${r.producto || 'vacío'}" sin fila en la nomenclatura (partner u otro negocio sin identificar)`};
+}
+function pageStep(page, fnCode) {
   const p = CFG.pages.find(x => x.hub === page);
   if (!p) return '';
   for (const e of (p.exc || '').split(/[,;]/)) {
     const [l, s] = e.split('=').map(x => (x || '').trim());
-    if (l === lineCode && s) return s;
+    if (l === fnCode && s) return s;
   }
   return p.step;
 }
 function resolve(r) {
   if (!r.linea) return {un:true, why:'Sin línea de negocio'};
-  const L = lineOf(r.linea);
-  if (!L) return {un:true, why:`Línea "${r.linea}" sin mapear a la nomenclatura`};
-  if (!r.pagina) return {un:true, line:L.code, why:'Sin tipo de página'};
-  const st = pageStep(r.pagina, L.code);
-  if (!st) return {un:true, line:L.code, why:`Página "${r.pagina}" sin paso asignado`};
-  const off = !L.steps.includes(st);
-  return {line:L.code, step:st, key:L.code + '|' + st, off, why: off ? `${L.code} no tiene el paso ${st}` : ''};
+  const f = rowOf(r);
+  if (!f.row) return {un:true, why:f.why};
+  const L = f.row, base = {line:L.code, fam:L.line, row:L};
+  if (!r.pagina) return {un:true, ...base, why:'Sin tipo de página'};
+  const st = pageStep(r.pagina, L.fn || L.line);
+  if (!st) return {un:true, ...base, why:`Página "${r.pagina}" sin paso asignado`};
+  let rows = [L];
+  if (f.group) rows = f.group.filter(l => l.steps.includes(st));
+  else if (f.wide) rows = CFG.lines.filter(l => l.grp === 'L' && l.line === L.line && !l.ter && l.steps.includes(st));
+  const off = !rows.length || !rows.some(l => l.steps.includes(st));
+  if (!rows.length) rows = [L];
+  return {...base, step:st, key:rows[0].code + '|' + st, keys:rows.map(l => l.code + '|' + st), wide:!!(f.wide || f.group), off, why: off ? `${L.code} no tiene el paso ${st}` : ''};
 }
 
 function build() {
   TD = D(S.today);
-  const subMap = Object.fromEntries(CFG.subs.map(x => [x.hub, x.code]));
   ITEMS = DATA.map(r => {
     const isPatch = r.tipo === 'PATCH';
     const s = r.ini ? D(r.ini) : null;
@@ -460,8 +508,9 @@ function build() {
     else cat = s == null ? 'backlog' : (s >= TD ? 'planned' : 'stale');
     const overdue = !isPatch && cat === 'live' && est && e < TD;
     const dev = (r.disp || []).map(x => x.toUpperCase());
+    const lane = resolve(r);
     const sm = (r.tags || []).map(t => String(t).match(/(\d+)\s*-\s*(\d+)/)).find(Boolean);
-    return {r, id:r.id, isPatch, s, e, est, cat, overdue, lane:resolve(r), sub:subMap[r.producto] || '', sprint: sm ? sm[1] + '-' + sm[2] : '',
+    return {r, id:r.id, isPatch, s, e, est, cat, overdue, lane, sub:subOf(lane), sprint: sm ? sm[1] + '-' + sm[2] : '',
             merc:r.merc || [], dev, short:shortName(r.nombre), conflict:false, xconf:false,
             endEff: e == null ? null : (overdue ? TD : e)};
   });
@@ -472,9 +521,9 @@ function pass(it) {
   if (it.cat === 'discarded' && !S.showDiscard) return false;
   if (S.mercs.length && !allMkt(it) && !it.merc.some(m => S.mercs.includes(m))) return false;
   if (S.devs.length && !allDev(it) && !it.dev.some(d => S.devs.includes(d))) return false;
-  if (S.sub && it.sub !== S.sub) return false;
+  if (S.sub && !subMatch(it, S.sub)) return false;
   if (S.sprint && it.sprint !== S.sprint) return false;
-  if (S.line && it.lane.line !== S.line) return false;
+  if (S.line && it.lane.fam !== S.line) return false;
   return true;
 }
 function overlaps(a, b) {
@@ -492,7 +541,7 @@ function clash(a, b) {
 function group() {
   V = ITEMS.filter(pass);
   BY = {}; UNK = [];
-  V.forEach(it => { if (it.lane.un) UNK.push(it); else (BY[it.lane.key] = BY[it.lane.key] || []).push(it); });
+  V.forEach(it => { if (it.lane.un) UNK.push(it); else laneKeys(it.lane).forEach(k => (BY[k] = BY[k] || []).push(it)); });
   const act = arr => (arr || []).filter(i => !i.isPatch && i.s != null && ['live','paused','planned'].includes(i.cat));
   Object.values(BY).forEach(arr => {
     const f = act(arr);
@@ -523,6 +572,7 @@ const crossFor = (lineCode, stepCode) => CROSS.filter(c => (c.all || c.it.lane.s
 const crossTip = c => { const i = c.it; return `Transversal · ${i.r.codigo} · ${i.short} · ${i.cat === 'paused' ? 'pausado' : 'día ' + (TD - i.s + 1)} · ${devLab(i).txt}${c.all ? ' · todo el funnel' : ''}`; };
 // barras de la matriz: una por transversal y fila (salvo en la fila del propio test); si afecta a todo el funnel cubre todas las columnas, si no, solo la de su paso
 const crossBars = L => {
+  if (!crossApplies(L)) return '';
   const vs = visSteps().map(s => s.code);
   return CROSS.filter(c => c.it.lane.line !== L.code && (c.all || vs.includes(c.it.lane.step))).map(c => {
     const col = c.all ? '2 / -1' : String(vs.indexOf(c.it.lane.step) + 2);
@@ -534,6 +584,40 @@ const confCls = i => (i.conflict ? ' conf' : '') + (i.xconf ? ' xconf' : '');
 
 /* ================= helpers de vista ================= */
 const stepOf = c => CFG.steps.find(s => s.code === c);
+// Secciones de la rejilla: líneas (con sublíneas desplegables), entradas y transversales, partners y otro negocio
+const SECTIONS = [['L','Líneas de negocio'], ['E','Transversales y entradas'], ['P','Partners'], ['B','Otro negocio']];
+const crossApplies = L => (L.grp === 'L' && L.main) || L.grp === 'E';   // las sublíneas desplegadas no repiten la barra
+const isChild = L => L.grp === 'L' && !L.main;
+const subOf = lane => lane && !lane.wide && lane.row && lane.row.grp === 'L' && lane.row.short ? lane.row.short : '';
+// pasa el filtro de sublínea si es de esa sublínea o es un test de toda la línea a la que pertenece
+const subMatch = (it, sub) => it.sub === sub || (it.lane.wide && laneKeys(it.lane).some(k => { const r = CFG.lines.find(l => l.code === k.split('|')[0]); return r && r.short === sub; }));
+const rowTitle = L => L.sub ? L.name + ' · ' + L.sub : L.name;
+const hiddenOf = L => CFG.lines.filter(x => x.grp === L.grp && x.line === L.line && !x.main);
+const famOpen = L => !!(S.open[L.line] || S.line === L.line || (S.sub && CFG.lines.some(x => x.line === L.line && x.short === S.sub && !x.main)));
+// Filas visibles de una sección: las principales siempre; las sublíneas secundarias solo con su línea desplegada
+const visRows = g => CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.line) && (l.main || famOpen(l)));
+// Desplegable sutil bajo la fila principal; con showLive resume cuántos tests live o planificados quedan escondidos
+function sbToggle(L, showLive) {
+  if (!(L.grp === 'L' && L.main)) return '';
+  const hs = hiddenOf(L);
+  if (!hs.length) return '';
+  const open = famOpen(L);
+  let extra = '';
+  if (showLive && !open) {
+    const codes = new Set(hs.map(x => x.code));
+    let live = 0, plan = 0;
+    Object.keys(BY).forEach(k => { if (codes.has(k.split('|')[0])) { const ls = laneSets(BY[k]); live += ls.live.length; plan += ls.plan.length; } });
+    extra = [live ? live + ' live' : '', plan ? plan + ' plan.' : ''].filter(Boolean).join(' · ');
+    extra = extra ? ' · ' + extra : '';
+  }
+  return `<button type="button" class="sbt" data-tg="${esc(L.line)}" aria-expanded="${open}" title="${open ? 'Ocultar' : 'Mostrar'} las sublíneas de ${esc(L.name)}">${open ? '▾ ocultar sublíneas' : '▸ ' + hs.length + ' sublíneas' + extra}</button>`;
+}
+// Etiqueta de fila: principales con el código de línea; sublíneas secundarias sangradas con su código corto
+function rowLabel(L, showLive) {
+  const child = isChild(L);
+  const tag = child ? L.short : L.line, name = child ? L.sub : L.name, small = child ? '' : L.sub;
+  return `<div class="rl${child ? ' child' : ''}" title="${esc(L.code)}"><span class="tag" style="background:${L.color}">${esc(tag)}</span><div>${esc(name)}${small ? `<small>${esc(small)}</small>` : ''}${sbToggle(L, showLive)}</div></div>`;
+}
 const visSteps = () => CFG.steps.filter(s => !S.hideSteps.includes(s.code));
 const fresh = a => a.filter(i => !i.isPatch);
 function laneSets(its) {
@@ -618,12 +702,12 @@ function renderMatrix() {
     <span>Pulsa una celda para ver el detalle</span></div>`;
   h += `<div class="mx" style="grid-template-columns:minmax(150px,176px) repeat(${cols},minmax(164px,1fr))"><div class="h"></div>`;
   visSteps().forEach(s => h += `<div class="h" title="${esc(s.def)}"><b>${esc(s.code)}</b>${esc(s.name)}</div>`);
-  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g, title]) => {
-    const lines = CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code));
+  SECTIONS.forEach(([g, title]) => {
+    const lines = visRows(g);
     if (!lines.length) return;
     h += `<div class="grp">${title}</div>`;
     lines.forEach(L => {
-      h += crossBars(L) + `<div class="rl"><span class="tag" style="background:${L.color}">${esc(L.code)}</span><div>${esc(L.label)}</div></div>`;
+      h += crossBars(L) + rowLabel(L, true);
       visSteps().forEach(st => h += cellHTML(L, st));
     });
   });
@@ -705,8 +789,8 @@ function renderGantt() {
     return `<div class="gr"><div class="gl"><div><b>${esc(st.code)}</b> <small>${esc(st.name)}</small></div><div class="tags">${tags.join('')}</div></div>
       <div class="gt" style="width:${W}px;height:${hgt}px">${bars}${empty}</div></div>`;
   }
-  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g]) => {
-    CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code)).forEach(L => {
+  SECTIONS.forEach(([g]) => {
+    visRows(g).forEach(L => {
       let body = '', n = 0;
       visSteps().forEach(st => {
         const key = L.code + '|' + st.code;
@@ -718,11 +802,11 @@ function renderGantt() {
       });
       if (body) {
         const vs = visSteps().map(s => s.code);
-        const xp = CROSS.filter(c => c.it.lane.line !== L.code && (c.all || vs.includes(c.it.lane.step))).map(c => {
+        const xp = !crossApplies(L) ? '' : CROSS.filter(c => c.it.lane.line !== L.code && (c.all || vs.includes(c.it.lane.step))).map(c => {
           const a = Math.max(c.it.s, t0), b = Math.min(c.it.endEff + 1, t1);
           return b > a ? `<div class="xpill" data-k="${esc(c.it.lane.key)}" data-id="${c.it.id}" style="--c:${c.color};left:${X(a)}px;width:${(b - a) * ppd}px" title="${esc(crossTip(c))}"><span class="xk">↔</span><span class="xt">Transversal · ${esc(c.it.short)}${c.all ? '' : ' (' + c.it.lane.step + ')'}</span></div>` : '';
         }).join('');
-        rows += `<div class="gr ghead" style="--c:${L.color}"><div class="gl">${esc(L.code)} · ${esc(L.label)}<small>${n} tests en ventana</small></div><div class="gt" style="width:${W}px;min-height:26px">${xp}</div></div>${body}`;
+        rows += `<div class="gr ghead" style="--c:${L.color}"><div class="gl">${esc(L.code)} · ${esc(rowTitle(L))}<small>${n} tests en ventana</small>${sbToggle(L, true)}</div><div class="gt" style="width:${W}px;min-height:26px">${xp}</div></div>${body}`;
       }
     });
   });
@@ -748,11 +832,11 @@ function renderStats() {
   const plan = t.filter(i => i.cat === 'planned');
   const over = t.filter(i => i.overdue);
   const gapKeys = [];
-  CFG.lines.filter(l => l.grp === 'L').forEach(L => L.steps.forEach(sc => {
+  CFG.lines.filter(l => l.grp === 'L' && l.main).forEach(L => L.steps.forEach(sc => {
     if (sc === 'ESC' || S.hideSteps.includes(sc)) return;
     if (isGap(laneSets(BY[L.code + '|' + sc] || []))) gapKeys.push(L.code + '|' + sc);
   }));
-  const lanes = CFG.lines.filter(l => l.grp === 'L').reduce((n, L) => n + L.steps.filter(sc => sc !== 'ESC' && !S.hideSteps.includes(sc)).length, 0);
+  const lanes = CFG.lines.filter(l => l.grp === 'L' && l.main).reduce((n, L) => n + L.steps.filter(sc => sc !== 'ESC' && !S.hideSteps.includes(sc)).length, 0);
   const patches = V.filter(i => i.isPatch && i.cat === 'live');
   const active = V.filter(i => ['live','paused','analyzing','planned','stale','backlog'].includes(i.cat));
   const bad = active.filter(i => i.lane.un || i.lane.off);
@@ -761,7 +845,7 @@ function renderStats() {
   STATD = {
     live:   {title:'Tests live', items:live, note:'Tests en marcha ahora, agrupados por carril (línea › paso).'},
     plan:   {title:'Planificados', items:plan, note:'Borradores con fecha de inicio futura, por carril.'},
-    gaps:   {title:'Carriles sin test', keys:gapKeys, note:`Carriles aplicables sin test live ni planificado (${gapKeys.length} de ${lanes}, sin contar ESC). Pulsa uno para ver su detalle.`},
+    gaps:   {title:'Carriles sin test', keys:gapKeys, note:`Carriles aplicables sin test live ni planificado (${gapKeys.length} de ${lanes}; solo líneas principales, sin contar ESC). Pulsa uno para ver su detalle.`},
     over:   {title:`Live pasados de ${S.dur} d`, items:over.slice().sort((a, b) => a.s - b.s), flat:true, note:'Siguen live pasada la duración prevista. Van de más a menos días en marcha.'},
     conf:   {title:'Carriles con solape', items:confI, note:'Tests del mismo carril que coinciden en fechas, mercado y dispositivo.'},
     xconf:  {title:'Carriles con solape entre pasos', items:xconfI, note:'Tests de la misma línea en pasos consecutivos del funnel que coinciden en fechas, mercado y dispositivo: el mismo usuario puede caer en los dos en una sesión.'},
@@ -778,7 +862,7 @@ function renderStats() {
 // Detalle de un KPI de cabecera en el panel lateral
 function laneName(key) {
   const [lc, sc] = key.split('|'), L = CFG.lines.find(l => l.code === lc), st = stepOf(sc);
-  return `${esc(lc)}${L ? ' ' + esc(L.label) : ''} › ${esc(sc)}${st ? ' ' + esc(st.name) : ''}`;
+  return `${esc(lc)}${L ? ' ' + esc(rowTitle(L)) : ''} › ${esc(sc)}${st ? ' ' + esc(st.name) : ''}`;
 }
 function laneOrder(key) {
   const [lc, sc] = key.split('|');
@@ -856,13 +940,12 @@ const verLab = v => v.charAt(0) + v.slice(1).toLowerCase().replace(/_/g, ' ');
 let UX = [], UXV = [], UXBY = {}, UXUNK = [], UXSTATD = {};
 
 function buildUx() {
-  const subMap = Object.fromEntries(CFG.subs.map(x => [x.hub, x.code]));
   const byCode = Object.fromEntries(ITEMS.map(i => [i.r.codigo, i]));
   UX = ESTUDIOS.map(r => {
     const cat = r.estado === 'ENTREGADO' ? 'done' : r.estado === 'DESCARTADO' ? 'discarded' : 'pending';
-    const s = r.ini ? D(r.ini) : null, e = r.fin ? D(r.fin) : null, c = r.creado ? D(r.creado) : null;
-    return {r, id:r.id, cat, s, e, c, when: e ?? s ?? c, proxy: s == null && e == null, lane: resolve(r),
-            merc: r.merc || [], dev: (r.disp || []).map(x => x.toUpperCase()), sub: subMap[r.producto] || '', ty: UXTIPO(r.tipo),
+    const s = r.ini ? D(r.ini) : null, e = r.fin ? D(r.fin) : null, c = r.creado ? D(r.creado) : null, lane = resolve(r);
+    return {r, id:r.id, cat, s, e, c, when: e ?? s ?? c, proxy: s == null && e == null, lane,
+            merc: r.merc || [], dev: (r.disp || []).map(x => x.toUpperCase()), sub: subOf(lane), ty: UXTIPO(r.tipo),
             hips: (r.hip || []).map(h => ({code: h.c, ver: h.v, it: byCode[h.c] || null}))};
   });
 }
@@ -870,13 +953,13 @@ function passUx(u) {
   if (u.cat === 'discarded' && !S.showDiscard) return false;
   if (S.mercs.length && !allMkt(u) && !u.merc.some(m => S.mercs.includes(m))) return false;
   if (S.devs.length && !allDev(u) && !u.dev.some(d => S.devs.includes(d))) return false;
-  if (S.sub && u.sub !== S.sub) return false;
-  if (S.line && u.lane.line !== S.line) return false;
+  if (S.sub && !subMatch(u, S.sub)) return false;
+  if (S.line && u.lane.fam !== S.line) return false;
   return true;
 }
 function groupUx() {
   UXV = UX.filter(passUx); UXBY = {}; UXUNK = [];
-  UXV.forEach(u => { if (u.lane.un) UXUNK.push(u); else (UXBY[u.lane.key] = UXBY[u.lane.key] || []).push(u); });
+  UXV.forEach(u => { if (u.lane.un) UXUNK.push(u); else laneKeys(u.lane).forEach(k => (UXBY[k] = UXBY[k] || []).push(u)); });
 }
 function uxSets(arr) {
   const done = arr.filter(u => u.cat === 'done').sort((a, b) => (b.when ?? 0) - (a.when ?? 0));
@@ -926,12 +1009,12 @@ function renderUx() {
     <span>“~” = el Hub no tiene fecha y se usa la de alta</span><span>Pulsa una celda para ver los estudios y sus hipótesis</span></div>`;
   h += `<div class="mx" style="grid-template-columns:minmax(150px,176px) repeat(${cols},minmax(164px,1fr))"><div class="h"></div>`;
   visSteps().forEach(s => h += `<div class="h" title="${esc(s.def)}"><b>${esc(s.code)}</b>${esc(s.name)}</div>`);
-  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g, title]) => {
-    const lines = CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code));
+  SECTIONS.forEach(([g, title]) => {
+    const lines = visRows(g);
     if (!lines.length) return;
     h += `<div class="grp">${title}</div>`;
     lines.forEach(L => {
-      h += `<div class="rl"><span class="tag" style="background:${L.color}">${esc(L.code)}</span><div>${esc(L.label)}</div></div>`;
+      h += rowLabel(L, false);
       visSteps().forEach(st => h += uxCell(L, st));
     });
   });
@@ -948,7 +1031,7 @@ function renderUxStats() {
   const done = UXV.filter(u => u.cat === 'done'), pend = UXV.filter(u => u.cat === 'pending');
   const hipU = new Set(done.flatMap(u => u.hips.map(h => h.code)));
   const lanes = [];
-  CFG.lines.filter(l => !S.line || S.line === l.code).forEach(L => L.steps.filter(sc => !S.hideSteps.includes(sc)).forEach(sc => lanes.push(L.code + '|' + sc)));
+  CFG.lines.filter(l => l.main && (!S.line || S.line === l.line)).forEach(L => L.steps.filter(sc => !S.hideSteps.includes(sc)).forEach(sc => lanes.push(L.code + '|' + sc)));
   const noStudy = lanes.filter(k => !(UXBY[k] || []).some(u => u.cat === 'done'));
   const bad = UXV.filter(u => u.cat !== 'discarded' && (u.lane.un || u.lane.off));
   UXSTATD = {
@@ -1014,7 +1097,7 @@ let PV = [], PBY = {}, PUNK = [], PSTATD = {};
 function groupPatch() {
   PV = V.filter(i => i.isPatch && i.cat === 'live');
   PBY = {}; PUNK = [];
-  PV.forEach(i => { if (i.lane.un) PUNK.push(i); else (PBY[i.lane.key] = PBY[i.lane.key] || []).push(i); });
+  PV.forEach(i => { if (i.lane.un) PUNK.push(i); else laneKeys(i.lane).forEach(k => (PBY[k] = PBY[k] || []).push(i)); });
   Object.values(PBY).concat([PUNK]).forEach(a => a.sort((x, y) => (y.s ?? -1) - (x.s ?? -1)));   // más recientes primero
 }
 // Los parches vienen como "Parche - ALL|MOB|GV|ALL - Nombre" (o con el prefijo en otro sitio): se deja solo el nombre
@@ -1053,12 +1136,12 @@ function renderPatch() {
     <span>Pulsa una celda para ver el detalle</span></div>`;
   h += `<div class="mx" style="grid-template-columns:minmax(150px,176px) repeat(${cols},minmax(164px,1fr))"><div class="h"></div>`;
   visSteps().forEach(s => h += `<div class="h" title="${esc(s.def)}"><b>${esc(s.code)}</b>${esc(s.name)}</div>`);
-  [['L','Líneas de negocio'],['E','Transversales y entradas']].forEach(([g, title]) => {
-    const lines = CFG.lines.filter(l => l.grp === g && (!S.line || S.line === l.code));
+  SECTIONS.forEach(([g, title]) => {
+    const lines = visRows(g);
     if (!lines.length) return;
     h += `<div class="grp">${title}</div>`;
     lines.forEach(L => {
-      h += `<div class="rl"><span class="tag" style="background:${L.color}">${esc(L.code)}</span><div>${esc(L.label)}</div></div>`;
+      h += rowLabel(L, false);
       visSteps().forEach(st => h += patchCell(L, st));
     });
   });
@@ -1115,19 +1198,22 @@ function openPatchLane(key) {
 
 /* ================= prompt ================= */
 function updatePrompt() {
-  const L = CFG.lines.filter(l => l.grp === 'L'), E = CFG.lines.filter(l => l.grp === 'E');
+  const L = CFG.lines.filter(l => l.grp === 'L'), E = CFG.lines.filter(l => l.grp === 'E'), P = CFG.lines.filter(l => l.grp === 'P'), B = CFG.lines.filter(l => l.grp === 'B');
+  const vis = l => l.steps.filter(c => !S.hideSteps.includes(c)).join(' ');
   const stepName = c => { const s = stepOf(c); return s ? `${c} (${s.name})` : c; };
   const p = [];
   p.push(`Rediseña en el CRO Hub de Logitravel la vista "Timeline de iniciativas" del Overview. Hoy agrupa por iniciativa o línea y las fechas no se entienden; quiero un roadmap de testing que muestre qué test está activo en cada paso del funnel de cada línea, cuánto dura y cuál viene después.`);
   p.push(`Estructura: cada carril es una línea de negocio × un paso canónico del funnel (${visSteps().map(s => stepName(s.code)).join(', ')}). Solo se dibujan los carriles que aplican a la línea:\n` +
-    L.map(l => `- ${l.code} (${l.label}): ${l.steps.filter(c => !S.hideSteps.includes(c)).join(' ')}`).join('\n') + `\nAdemás, filas aparte de transversales y entradas: ` + E.map(l => `${l.code} (${l.steps.filter(c => !S.hideSteps.includes(c)).join(' ')})`).join('; ') + `.`
+    L.map(l => `- ${l.code} (${rowTitle(l)}${l.main && hiddenOf(l).length ? '; fila principal, con las otras sublíneas en un desplegable' : ''}): ${vis(l)}`).join('\n') + `\nAdemás, filas aparte de transversales y entradas: ` + E.map(l => `${l.code} (${vis(l)})`).join('; ') + `.`
+    + `\nSección de partners (una fila por línea que contrata, con el funnel de esa línea; el partner se identifica por el campo producto del Hub): ` + P.map(l => `${l.code} (${rowTitle(l)}): ${vis(l)}`).join('; ') + `.`
+    + (B.length ? `\nSección aparte de otro negocio, que no es partner ni línea de Logitravel y contrata todas las líneas: ` + B.map(l => `${l.code} (${l.name}): ${vis(l)}`).join('; ') + `.` : '')
     + (S.hideSteps.length ? `\nPor ahora NO se muestra el paso ${S.hideSteps.map(stepName).join(', ')}: ocúltalo de la vista pero deja preparado el mapeo para activarlo más adelante.` : ''));
-  p.push(`Mapeo desde los campos actuales del Hub: lineaNegocio → ` + CFG.lines.map(l => `${l.hub.replace(/\s/g, '')}→${l.code}`).join(', ')
+  p.push(`Mapeo desde los campos actuales del Hub: lineaNegocio + producto → fila: ` + CFG.lines.filter(l => l.hub).map(l => `${l.hub.replace(/\s/g, '')}${l.prod ? '+' + l.prod : ''}→${l.code}${l.strict ? ' (exige producto)' : ''}`).join(', ') + ` (sin producto reconocido, cae en la fila principal de la línea salvo las que exigen producto)`
     + `. tipoPagina → paso: ` + CFG.pages.map(x => `${x.hub}→${x.step || '(sin paso)'}${x.exc ? ` [excepciones ${x.exc}]` : ''}`).join('; ')
-    + `. Sublínea desde el campo producto: ` + CFG.subs.map(x => `${x.hub}→${x.code}`).join(', ') + `.`);
+    + `.`);
   p.push(`Dos modos con conmutador. (1) "Pipeline": matriz línea × paso; cada celda muestra el test live (código, nombre corto, día n de N, aviso si pasa de la duración prevista), el siguiente planificado con su fecha de inicio, y tres contadores discretos: backlog (drafts pendientes de aprobar), aprobados (drafts aprobados sin fecha futura) y parches, estos últimos con menos peso visual; una celda sin live ni planificado se marca como hueco; clic abre el detalle del carril. (2) "Roadmap": Gantt con un carril por fila agrupado por línea, eje en semanas con bandas de sprint de 2 semanas (las etiquetas de sprint del Hub, p. ej. "Week 42-43" o "Sprint 40-41", agrupan los tests por sprint; añade un filtro por sprint), línea de hoy, y barras coloreadas por estado (Draft, Live, Paused, Analyzing, Ended). Si dos tests del mismo carril se solapan y comparten mercado y dispositivo, se marcan ambos como solape. Y si dos tests de la misma línea en pasos consecutivos del funnel coinciden en fechas, mercado y dispositivo, se marcan ambos como "solape entre pasos" con un color distinto (el mismo usuario puede caer en los dos en una sesión).`);
   const cl = CFG.lines.filter(l => l.cross);
-  if (cl.length) p.push(`Tests transversales: los de la línea ${cl.map(l => `${l.code} (${l.hub.replace(/\s/g, '')})`).join(', ')} cruzan todas las líneas. Si el Hub los tiene en el escaparate (${CFG.steps[0].code}) se consideran de todo el funnel; en otra página, solo de ese paso. Mientras estén live o pausados, cada fila de la matriz lleva encima una barra fina y tenue, aparte de las tarjetas, con el nombre del test (cubre las columnas que afecta) y en el Roadmap una pastilla tenue en la cabecera de cada línea, en el rango de fechas del test (los carriles quedan limpios), con tooltip y clic al detalle; el test completo solo se muestra en su propio carril.`);
+  if (cl.length) p.push(`Tests transversales: los de la línea ${cl.map(l => `${l.code} (${l.hub.replace(/\s/g, '')})`).join(', ')} cruzan todas las líneas de Logitravel (no los partners ni el otro negocio). Si el Hub los tiene en el escaparate (${CFG.steps[0].code}) se consideran de todo el funnel; en otra página, solo de ese paso. Mientras estén live o pausados, cada fila de la matriz lleva encima una barra fina y tenue, aparte de las tarjetas, con el nombre del test (cubre las columnas que afecta) y en el Roadmap una pastilla tenue en la cabecera de cada línea, en el rango de fechas del test (los carriles quedan limpios), con tooltip y clic al detalle; el test completo solo se muestra en su propio carril.`);
   p.push(`Reglas de datos: los tests A/B y de personalización sin fechaFin usan una duración estimada de ${S.dur} días y se pintan rayados; si siguen LIVE pasada esa duración se marcan como "sobre plan". Los parches (tipo PATCH) son cambios permanentes: no tienen duración, se muestran como rombo o contador y no cuentan como test activo. "Siguiente" = el borrador aprobado con fechaInicio futura más cercana; los borradores con fecha pasada se listan como "fecha vencida" y los que no tienen fecha, como backlog. Los registros descartados se ocultan por defecto. Los registros sin línea o con página sin paso van a un carril "Sin clasificar" visible, no se descartan en silencio.`);
   const ch = [];
   if (S.view !== DEF.view) ch.push(`vista inicial: ${S.view === 'gantt' ? 'Roadmap' : 'matriz'}`);
@@ -1169,8 +1255,9 @@ function syncControls() {
 }
 function fillFilterLists() {
   const cur = S.line;
-  $('#fLine').innerHTML = '<option value="">Todas las líneas</option>' + CFG.lines.map(l => `<option value="${esc(l.code)}">${esc(l.code)} · ${esc(l.label)}</option>`).join('');
-  const subs = [...new Set(CFG.subs.map(s => s.code))];
+  const fams = []; CFG.lines.forEach(l => { if (!fams.some(f => f.line === l.line)) fams.push(l); });
+  $('#fLine').innerHTML = '<option value="">Todas las líneas</option>' + fams.map(l => `<option value="${esc(l.line)}">${esc(l.line)} · ${esc(l.name)}</option>`).join('');
+  const subs = [...new Set(CFG.lines.filter(l => l.grp === 'L' && l.short).map(l => l.short))];
   $('#fSub').innerHTML = '<option value="">Todas las sublíneas</option>' + subs.map(s => `<option>${esc(s)}</option>`).join('');
   $('#fLine').value = cur;
   const sp = {}; DATA.forEach(r => (r.tags || []).forEach(t => { const m = String(t).match(/(\d+)\s*-\s*(\d+)/); if (m) sp[m[1] + '-' + m[2]] = 1; }));
@@ -1222,6 +1309,8 @@ function bind() {
     const p = e.target.closest('[data-plane]'); if (p) openPatchLane(p.dataset.plane);
   });
   $('#view').onclick = e => {
+    const tg = e.target.closest('[data-tg]');
+    if (tg) { const y = $('#view').scrollTop; S.open[tg.dataset.tg] = !S.open[tg.dataset.tg]; renderMain(); $('#view').scrollTop = y; return; }
     if (S.view === 'ux') { const u = e.target.closest('[data-u]'); if (u) openUxLane(u.dataset.u); return; }
     if (S.view === 'patch') { const p = e.target.closest('[data-p]'); if (p) openPatchLane(p.dataset.p); return; }
     const el = e.target.closest('[data-k]'); if (!el) return;
@@ -1243,23 +1332,27 @@ function renderEditors() {
   const stepOpts = (sel, blank) => (blank ? `<option value="">(sin paso)</option>` : '') + CFG.steps.map(s => `<option ${s.code === sel ? 'selected' : ''}>${esc(s.code)}</option>`).join('');
   const changed = (structural) => { saveCfg(); if (structural) fillFilterLists(); renderMain(); };
 
-  // líneas
-  let h = `<table><tr><th>Cód.</th><th>Nombre</th><th>Valores del Hub</th><th></th></tr>`;
+  // líneas y sublíneas (una fila por carril)
+  let h = `<table><tr><th>Cód.</th><th>Nombre</th><th>Sublínea</th><th></th></tr>`;
   CFG.lines.forEach((l, i) => h += `<tr><td><input type="text" class="sm" data-l="${i}" data-f="code" value="${esc(l.code)}"></td>
-    <td><input type="text" data-l="${i}" data-f="label" value="${esc(l.label)}"></td>
-    <td><input type="text" data-l="${i}" data-f="hub" value="${esc(l.hub)}"></td><td><span class="x" data-dl="${i}" title="Quitar">×</span></td></tr>
+    <td><input type="text" data-l="${i}" data-f="name" value="${esc(l.name)}"></td>
+    <td><input type="text" data-l="${i}" data-f="sub" value="${esc(l.sub)}"></td><td><span class="x" data-dl="${i}" title="Quitar">×</span></td></tr>
+    <tr><td colspan="4"><div style="display:flex;gap:4px;margin:2px 0"><input type="text" data-l="${i}" data-f="hub" value="${esc(l.hub)}" placeholder="Línea del Hub"><input type="text" data-l="${i}" data-f="prod" value="${esc(l.prod)}" placeholder="Producto del Hub"></div></td></tr>
     <tr><td colspan="4"><div class="stepbtns" data-ls="${i}">${CFG.steps.map(s => `<span data-s="${s.code}" class="${l.steps.includes(s.code) ? 'on' : ''}" title="${esc(s.name)}">${esc(s.code)}</span>`).join('')}
-    <select data-l="${i}" data-f="grp" style="width:auto;margin-left:6px;font-size:11px"><option value="L" ${l.grp === 'L' ? 'selected' : ''}>línea</option><option value="E" ${l.grp === 'E' ? 'selected' : ''}>entrada/transv.</option></select></div></td></tr>`);
-  h += `</table><div class="note">Los pasos resaltados son los que aplican a la línea; el resto se muestra como "No aplica".</div><button class="btn" id="addLine">+ línea</button>`;
+    <select data-l="${i}" data-f="grp" style="width:auto;margin-left:6px;font-size:11px"><option value="L" ${l.grp === 'L' ? 'selected' : ''}>línea</option><option value="E" ${l.grp === 'E' ? 'selected' : ''}>entrada/transv.</option><option value="P" ${l.grp === 'P' ? 'selected' : ''}>partner</option><option value="B" ${l.grp === 'B' ? 'selected' : ''}>otro negocio</option></select>
+    <label style="margin-left:6px;font-size:11px;white-space:nowrap"><input type="checkbox" data-l="${i}" data-f="main" ${l.main ? 'checked' : ''}> visible</label></div></td></tr>`);
+  h += `</table><div class="note">Los pasos resaltados son los que aplican; el resto se muestra como "No aplica". "Visible" = fila principal; las demás sublíneas de su línea salen en el desplegable. Un registro del Hub cae en la fila cuya línea y producto coinciden; si no hay producto reconocido, en la principal (los partners exigen producto).</div><button class="btn" id="addLine">+ línea</button>`;
   $('#edLines').innerHTML = h;
-  $('#edLines').oninput = e => { const t = e.target; if (t.dataset.l == null) return; CFG.lines[+t.dataset.l][t.dataset.f] = t.value; changed(t.dataset.f === 'code' || t.dataset.f === 'label'); };
-  $('#edLines').onchange = e => { const t = e.target; if (t.dataset.f === 'grp') { CFG.lines[+t.dataset.l].grp = t.value; changed(); } };
+  $('#edLines').oninput = e => { const t = e.target; if (t.dataset.l == null || t.type === 'checkbox') return; CFG.lines[+t.dataset.l][t.dataset.f] = t.value; changed(['code', 'name', 'sub'].includes(t.dataset.f)); };
+  $('#edLines').onchange = e => { const t = e.target; if (t.dataset.l == null) return;
+    if (t.dataset.f === 'grp') { CFG.lines[+t.dataset.l].grp = t.value; changed(); }
+    if (t.dataset.f === 'main') { CFG.lines[+t.dataset.l].main = t.checked; changed(); } };
   $('#edLines').onclick = e => {
     const sp = e.target.closest('[data-s]');
     if (sp) { const l = CFG.lines[+sp.parentNode.dataset.ls], c = sp.dataset.s, i = l.steps.indexOf(c); i < 0 ? l.steps.push(c) : l.steps.splice(i, 1);
       l.steps.sort((a, b) => CFG.steps.findIndex(s => s.code === a) - CFG.steps.findIndex(s => s.code === b)); sp.classList.toggle('on'); changed(); return; }
     const d = e.target.closest('[data-dl]'); if (d) { CFG.lines.splice(+d.dataset.dl, 1); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); return; }
-    if (e.target.id === 'addLine') { CFG.lines.push({code:'NEW', label:'Nueva línea', grp:'L', color:'#6ea8ff', hub:'', steps:['ESC']}); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); }
+    if (e.target.id === 'addLine') { CFG.lines.push({code:'NEW', line:'NEW', grp:'L', main:true, name:'Nueva línea', sub:'', short:'', color:'#6ea8ff', hub:'', prod:'', steps:['ESC']}); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); }
   };
 
   // páginas
@@ -1273,17 +1366,6 @@ function renderEditors() {
   $('#edPages').onclick = e => {
     const d = e.target.closest('[data-dp]'); if (d) { CFG.pages.splice(+d.dataset.dp, 1); saveCfg(); renderEditors(); renderMain(); return; }
     if (e.target.id === 'addPage') { CFG.pages.push({hub:'', step:'', exc:''}); saveCfg(); renderEditors(); }
-  };
-
-  // sublíneas
-  h = `<table><tr><th>Producto en el Hub</th><th>Código</th><th></th></tr>`;
-  CFG.subs.forEach((s, i) => h += `<tr><td><input type="text" data-s2="${i}" data-f="hub" value="${esc(s.hub)}"></td><td><input type="text" class="sm" data-s2="${i}" data-f="code" value="${esc(s.code)}"></td><td><span class="x" data-ds="${i}">×</span></td></tr>`);
-  h += `</table><div class="note">Ej.: VUELOS → VUE es sublínea de TRA; V+H es sublínea de PAQ. La sublínea no cambia el carril, sirve para filtrar y etiquetar.</div><button class="btn" id="addSub">+ sublínea</button>`;
-  $('#edSubs').innerHTML = h;
-  $('#edSubs').oninput = e => { const t = e.target; if (t.dataset.s2 == null) return; CFG.subs[+t.dataset.s2][t.dataset.f] = t.value; changed(true); };
-  $('#edSubs').onclick = e => {
-    const d = e.target.closest('[data-ds]'); if (d) { CFG.subs.splice(+d.dataset.ds, 1); saveCfg(); renderEditors(); fillFilterLists(); renderMain(); return; }
-    if (e.target.id === 'addSub') { CFG.subs.push({hub:'', code:''}); saveCfg(); renderEditors(); }
   };
 
   // pasos
