@@ -248,6 +248,12 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 #drawer .hd{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
 #drawer .hd h2{margin:0;font-size:18px;font-weight:600;flex:1}
 #drawer .bd{overflow:auto;padding:6px 14px 30px}
+#drawer details.fold{margin:16px 0 6px;border:0;border-radius:0;background:transparent}
+#drawer details.fold>summary{padding:0;margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);font-weight:700;cursor:pointer;list-style:none}
+#drawer details.fold>summary::-webkit-details-marker{display:none}
+#drawer details.fold>summary::before{content:'▸';display:inline-block;width:14px}
+#drawer details.fold[open]>summary::before{content:'▾'}
+#drawer details.fold>summary:hover{color:var(--tx)}
 #drawer h4{margin:16px 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}
 .it{border:1px solid var(--line);border-radius:8px;padding:7px 9px;margin:5px 0;background:var(--panel2)}
 .it.hl{border-color:var(--acc)}
@@ -352,6 +358,12 @@ const isoWeek = d => {
 };
 const monday = d => d - ((d + 3) % 7);   // 1970-01-01 fue jueves
 const TIPO = {AB_TEST:'A/B', PERSONALIZATION:'Perso', PATCH:'Parche', ENCUESTA:'Encuesta', MULTI_PAGE:'Multi-pág'};
+// Los registros en DRAFT se nombran según el campo de aprobación del Hub: APROBADO = Draft, PENDIENTE = Backlog
+const catLab = i => {
+  if (i.cat !== 'stale' && i.cat !== 'backlog') return CATNAME[i.cat];
+  if (i.r.aprob === 'PENDIENTE') return 'Backlog';
+  return i.s == null ? 'Draft sin fecha' : 'Draft fecha vencida';
+};
 const CATNAME = {live:'Live', paused:'Pausado', analyzing:'Analyzing', ended:'Ended', planned:'Planificado', stale:'Draft fecha vencida', backlog:'Backlog', discarded:'Descartado'};
 
 function shortName(n) {
@@ -505,7 +517,8 @@ function build() {
     else if (r.estado === 'PAUSED') cat = 'paused';
     else if (r.estado === 'ANALYZING') cat = 'analyzing';
     else if (r.estado === 'ENDED') cat = 'ended';
-    else cat = s == null ? 'backlog' : (s >= TD ? 'planned' : 'stale');
+    // DRAFT: solo una hipótesis APROBADA con fecha puede ser planificada o vencida; PENDIENTE es siempre backlog, tenga o no fecha
+    else cat = r.aprob !== 'APROBADO' || s == null ? 'backlog' : (s >= TD ? 'planned' : 'stale');
     const overdue = !isPatch && cat === 'live' && est && e < TD;
     const dev = (r.disp || []).map(x => x.toUpperCase());
     const lane = resolve(r);
@@ -772,7 +785,7 @@ function renderGantt() {
       if (ti < 0) { ti = tracks.length; tracks.push(0); }
       tracks[ti] = x2;
       const top = 6 + ti * 24;
-      const tip = `${it.r.codigo} · ${it.r.nombre}\n${TIPO[it.r.tipo] || it.r.tipo} · ${CATNAME[it.cat]}${it.s != null ? ' · ' + fmt(it.s) + (it.e != null ? ' → ' + fmt(it.e) + (it.est ? ' (fin estimado)' : '') : '') : ''}${it.overdue ? '\nSigue live pasada la duración prevista' : ''}${it.conflict ? '\n⚠ Solapa con otro test del mismo carril' : ''}${it.xconf ? '\n⚠ Solapa con un test del paso contiguo de la misma línea' : ''}`;
+      const tip = `${it.r.codigo} · ${it.r.nombre}\n${TIPO[it.r.tipo] || it.r.tipo} · ${catLab(it)}${it.s != null ? ' · ' + fmt(it.s) + (it.e != null ? ' → ' + fmt(it.e) + (it.est ? ' (fin estimado)' : '') : '') : ''}${it.overdue ? '\nSigue live pasada la duración prevista' : ''}${it.conflict ? '\n⚠ Solapa con otro test del mismo carril' : ''}${it.xconf ? '\n⚠ Solapa con un test del paso contiguo de la misma línea' : ''}`;
       if (it.isPatch) bars += `<div class="dia ${it.cat}" data-k="${esc(key)}" data-id="${it.id}" style="left:${x1}px;top:${top + 2}px" title="${esc(tip)}"></div>`;
       else {
         bars += `<div class="bar ${it.cat}${it.est ? ' est' : ''}${confCls(it)}" data-k="${esc(key)}" data-id="${it.id}" style="left:${x1}px;top:${top}px;width:${w}px" title="${esc(tip)}"><b style="font:700 9.5px ui-monospace,Consolas,monospace;opacity:.8">${esc(devLab(it).txt)}</b> ${esc(it.short)}</div>`;
@@ -889,7 +902,7 @@ function openStat(id) {
 /* ================= drawer ================= */
 function itemHTML(i, hl) {
   return `<div class="it${hl === i.id ? ' hl' : ''}" id="it-${i.id}"><div class="top"><span class="code">${esc(i.r.codigo)}</span>
-    <span class="st ${i.cat}">${CATNAME[i.cat]}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span><span class="dv ${devLab(i).cls}">${esc(devLab(i).txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}
+    <span class="st ${i.cat}">${esc(catLab(i))}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span><span class="dv ${devLab(i).cls}">${esc(devLab(i).txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}
     ${i.overdue ? '<span class="bad">· sigue live pasada la duración</span>' : ''}${i.conflict ? '<span class="bad">· solape</span>' : ''}${i.xconf ? '<span class="cross">· solape entre pasos</span>' : ''}</div>
     <div class="nm">${esc(i.r.nombre)}</div>
     ${i.lane.why ? `<div class="mt warn">⚠ ${esc(i.lane.why)}</div>` : ''}${runningInfo(i)}</div>`;
@@ -912,10 +925,18 @@ function openLane(key, hl) {
   const [lc, sc] = key.split('|'), L = CFG.lines.find(l => l.code === lc), st = stepOf(sc);
   const title = key === 'UNK' ? 'Sin clasificar' : `${esc(lc)} › ${esc(sc)} ${st ? esc(st.name) : ''}`;
   const ls = laneSets(its);
-  const sect = (n, arr, lim) => arr.length ? `<h4>${n} · ${arr.length}</h4>` + arr.slice(0, lim || 99).map(i => itemHTML(i, hl)).join('') + (lim && arr.length > lim ? `<div class="note">+${arr.length - lim} más</div>` : '') : '';
+  const sect = (n, arr, lim, fold) => {
+    if (!arr.length) return '';
+    const list = arr.slice(0, lim || 99).map(i => itemHTML(i, hl)).join('') + (lim && arr.length > lim ? `<div class="note">+${arr.length - lim} más</div>` : '');
+    if (!fold) return `<h4>${n} · ${arr.length}</h4>` + list;
+    const open = hl && arr.slice(0, lim || 99).some(i => i.id === hl);
+    return `<details class="fold"${open ? ' open' : ''}><summary>${n} · ${arr.length}</summary>${list}</details>`;
+  };
+  const idle = ls.back.concat(ls.stale).sort((a, b) => (a.s ?? 9e9) - (b.s ?? 9e9));   // drafts sin fecha futura, agrupados por aprobación
   let body = st ? `<div class="note">${esc(st.def)}</div>` : '';
-  body += sect('En marcha', ls.live) + sect('En análisis', ls.ana) + sect('Siguientes planificados', ls.plan) + sect('Drafts con fecha vencida (reprogramar)', ls.stale)
-    + sect('Backlog sin fecha', ls.back, 10) + sect('Parches activos', ls.patches, 8) + sect('Finalizados recientes', ls.ended, 8) + sect('Descartados', ls.disc, 5);
+  body += sect('En marcha', ls.live) + sect('En análisis', ls.ana) + sect('Siguientes planificados', ls.plan) + sect('Hipótesis sin aprobación', idle.filter(i => i.r.aprob === 'PENDIENTE'), 10)
+    + sect('Hipótesis aprobadas sin fecha', idle.filter(i => i.r.aprob === 'APROBADO' && i.s == null), 10)
+    + sect('Hipótesis aprobadas con fecha vencida (reprogramar)', idle.filter(i => i.r.aprob === 'APROBADO' && i.s != null)) + sect('Parches activos', ls.patches, 8, true) + sect('Finalizados recientes', ls.ended, 8, true) + sect('Descartados', ls.disc, 5);
   if (isGap(ls) && key !== 'UNK') body = `<div class="it"><b>Hueco de testing:</b> ahora mismo no hay test live ni planificado en este carril.</div>` + body;
   openDrawer(title, body || '<div class="note">Sin registros.</div>');
   if (hl) { const el = $('#it-' + hl); if (el) el.scrollIntoView({block:'center'}); }
@@ -1050,7 +1071,7 @@ function renderUxStats() {
 function uxHipHTML(h) {
   const i = h.it;
   const when = !i ? 'Sin datos en el Hub' : i.s == null ? 'Sin fecha de inicio' : fmtY(i.s) + (i.r.fin ? ' → ' + fmtY(D(i.r.fin)) : i.cat === 'live' ? ' → en marcha' : '');
-  return `<div class="hp"><div class="top"><span class="code">${esc(h.code)}</span>${i ? `<span class="st ${i.cat}">${CATNAME[i.cat]}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span>` : ''}${h.ver ? `<span class="sub">${esc(verLab(h.ver))}</span>` : ''}</div>
+  return `<div class="hp"><div class="top"><span class="code">${esc(h.code)}</span>${i ? `<span class="st ${i.cat}">${esc(catLab(i))}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span>` : ''}${h.ver ? `<span class="sub">${esc(verLab(h.ver))}</span>` : ''}</div>
     ${i ? `<div class="nm">${esc(i.short)}</div>` : ''}<div class="mt">${when}</div></div>`;
 }
 function uxItemHTML(u) {
