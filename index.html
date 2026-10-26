@@ -297,6 +297,61 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 .inf[open]>summary{padding-bottom:2px}
 .inf .tx{padding-bottom:8px;white-space:pre-wrap;font-size:12px;line-height:1.4;max-height:11em;overflow:auto;overflow-wrap:anywhere}
 .inf.none{color:var(--mut);font-size:11.5px;font-style:italic;padding:4px 0}
+/* ---------- ficha de edición (réplica del modal "Editar LOGI-xxxx" del CRO Hub; siempre en claro, como el Hub) ---------- */
+.rec{cursor:pointer}.rec:hover{border-color:var(--acc)}
+#ficha{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:120}
+#ficha[hidden]{display:none}
+#ficha .fm{background:#fff;color:#0f172a;border-radius:16px;width:720px;max-width:94vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.35);font:14px/1.4 var(--sans);color-scheme:light;overflow:hidden}
+#ficha .fh{padding:20px 28px 14px;border-bottom:1px solid #e2e8f0;position:relative}
+#ficha .fh h3{margin:0;font-size:17px;font-weight:500}
+#ficha .fh .fs{color:#64748b;font-size:14px;margin-top:4px;padding-right:28px}
+#ficha .fx{position:absolute;top:16px;right:20px;border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#0f172a}
+#ficha .fb{overflow:auto;padding:8px 28px 22px}
+#ficha .fl{display:block;margin:20px 0 6px;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#64748b}
+#ficha .fl i,#ficha .fq i{color:#dc2626;font-style:normal}
+#ficha .fl em{font-style:normal;font-weight:400;text-transform:none;letter-spacing:0}
+#ficha .fq{display:block;margin:14px 0 6px;font-size:13px;font-weight:500;color:#0f172a}
+#ficha .fq em{font-style:normal;font-weight:400;color:#64748b}
+#ficha input[type=text],#ficha textarea,#ficha .sel{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font:14px/1.45 var(--sans);color:#0f172a;background:#fff;min-height:36px}
+#ficha textarea{resize:vertical;min-height:70px}
+#ficha .sel{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#ficha .sel::after{content:'';width:7px;height:7px;border-right:1.6px solid #475569;border-bottom:1.6px solid #475569;transform:rotate(45deg) translate(-2px,-2px);flex:none}
+#ficha .sel.ph{color:#cbd5e1}
+#ficha .sel.on{background:#fff7ed;border-color:#fcb040}
+#ficha .fk{display:flex;gap:24px;margin:20px 0}
+#ficha .fk label,#ficha .fsp label{display:flex;align-items:center;gap:8px;font-size:14px;color:#0f172a}
+#ficha .fmx{border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px 16px}
+#ficha h5{margin:0;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#64748b}
+#ficha .fmx>.fq:first-of-type{margin-top:12px}
+#ficha .fmx .sel+.sel{margin-top:8px}
+#ficha .ice{border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px 12px;margin-top:16px}
+#ficha .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+#ficha .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#ficha .g3 .fl{margin-top:12px}
+#ficha .ice input{font:14px var(--mono)}
+#ficha .score{display:flex;justify-content:space-between;align-items:center;background:#001f3d;color:#fff;border-radius:6px;padding:16px;margin-top:14px;font-weight:700;font-size:12px;letter-spacing:.4px}
+#ficha .score b{color:#fcb040;font:700 20px var(--mono)}
+#ficha details.iexp{margin:12px 0 0;font-size:12px;border:0;background:none;border-radius:0}
+#ficha .iexp summary{padding:0;background:none}
+#ficha .iexp summary{color:#f59e0b;font-weight:600;cursor:pointer;list-style:none}
+#ficha .iexp summary::-webkit-details-marker{display:none}
+#ficha .iexp summary::before{content:'\25BE';display:inline-block;width:14px;font-size:10px}
+#ficha .iexp[open] summary::before{content:'\25B4'}
+#ficha .iexp div{color:#475569;margin-top:6px;line-height:1.5}
+#ficha .urls{border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px 16px;margin-top:16px}
+#ficha .urls .fsp{margin:10px 0 12px}
+#ficha .urls .fsp label{font-size:13px}
+#ficha .urls .fq{margin:0 0 6px}
+#ficha .dt .sel::after{display:none}
+#ficha .dt .sel{justify-content:flex-start;gap:10px}
+#ficha .dt .sel.ph{color:#94a3b8}
+#ficha .dt svg{flex:none;color:#64748b}
+#ficha .dt .xx{margin-left:auto;color:#64748b;font-size:18px;line-height:1}
+#ficha .hint{font-size:11.5px;color:#64748b;margin-top:4px}
+#ficha .ff{display:flex;justify-content:flex-end;gap:12px;padding:14px 28px 16px;border-top:1px solid #e2e8f0;background:#f8fafc}
+#ficha .ff button{border-radius:10px;padding:9px 20px;font:500 14px var(--sans);cursor:pointer;border:0;background:none;color:#0f172a}
+#ficha .ff .go{background:#fcb040}
+#ficha .fnote{margin-top:16px;font-size:12px;color:#64748b}
 /* ediciones locales: arrastrar tarjetas, estirar barras, resumen de cambios */
 .pill[draggable=true],.nextline[draggable=true],.it[draggable=true]{cursor:grab}
 .pill.dragging,.nextline.dragging,.it.dragging{opacity:.4}
@@ -404,6 +459,7 @@ html:not([data-theme=light]) #chg.has{background:#3b2410;color:#fdba74}
 </main>
 </div>
 <div id="drawer"></div>
+<div id="ficha" hidden></div>
 <div id="toast" role="status"></div>
 <div id="plan" hidden><div class="pc"><h3 id="planT">Planificar test</h3><div class="mt" id="planN"></div>
   <div class="pr"><label>Fecha de inicio<input type="date" id="planD"></label><label>Duración (días)<input type="number" id="planL" min="1" max="120"></label></div>
@@ -1116,7 +1172,7 @@ function openStat(id) {
 
 /* ================= drawer ================= */
 function itemHTML(i, hl) {
-  return `<div class="it${hl === i.id ? ' hl' : ''}" id="it-${i.id}"${dragAttr(i)}><div class="top"><span class="code">${esc(i.r.codigo)}</span>${i.ed ? '<span class="edtag">EDITADO</span>' : ''}
+  return `<div class="it rec${hl === i.id ? ' hl' : ''}" id="it-${i.id}" data-rec="${i.id}" title="Clic para abrir la ficha de edición del Hub"${dragAttr(i)}><div class="top"><span class="code">${esc(i.r.codigo)}</span>${i.ed ? '<span class="edtag">EDITADO</span>' : ''}
     <span class="st ${i.cat}">${esc(catLab(i))}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span><span class="dv ${devLab(i).cls}">${esc(devLab(i).txt)}</span>${i.sub ? `<span class="sub">${esc(i.sub)}</span>` : ''}
     ${i.overdue ? '<span class="bad">· sigue live pasada la duración</span>' : ''}${i.conflict ? '<span class="bad">· solape</span>' : ''}${i.xconf ? '<span class="cross">· solape entre pasos</span>' : ''}</div>
     <div class="nm">${esc(i.r.nombre)}</div>
@@ -1166,6 +1222,72 @@ function openAudit() {
   Object.entries(g).sort((a, b) => b[1].length - a[1].length).forEach(([w, arr]) => body += `<h4>${esc(w)} · ${arr.length}</h4>` + arr.map(i => itemHTML(i)).join(''));
   openDrawer('Auditoría de nomenclatura', act.length ? body : body + '<div class="it">Todo clasificado.</div>');
 }
+
+/* ================= ficha de edición del Hub ================= */
+// Réplica del modal "Editar LOGI-xxxx" del CRO Hub, para enseñar al desarrollador cómo se abre desde cada test.
+// Datos: los del registro (con las ediciones locales de fechas ya aplicadas). Guardar no escribe en ningún sitio: es solo maqueta.
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const CAL = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1.5v3M11 1.5v3"/></svg>';
+function openFicha(id) {
+  const r0 = DATA.find(x => x.id === id); if (!r0) return;
+  const r = eff(r0);
+  const ta = (l, v, rows) => `<span class="fl">${l}</span><textarea rows="${rows}">${esc(v)}</textarea>`;
+  const sel = (v, ph, cls) => v ? `<div class="sel${cls ? ' ' + cls : ''}"><span>${esc(v)}</span></div>` : `<div class="sel ph"><span>${esc(ph)}</span></div>`;
+  const fecha = v => { const [y, m, d] = v.split('-'); return `${+d} de ${MESES[+m - 1]} ${y}`; };
+  const dt = (l, v) => `<span class="fl">${l} <em>(opcional)</em></span><div class="dt"><div class="sel${v ? '' : ' ph'}">${CAL}<span>${v ? esc(fecha(v)) : 'Selecciona una fecha'}</span>${v ? '<span class="xx">&times;</span>' : ''}</div></div>`;
+  const cap = t => t ? t.charAt(0) + t.slice(1).toLowerCase() : '';
+  const merc = (r.merc || []).join(', '), tags = (r.tags || []).join(', ');
+  const disp = (r.disp || []).length > 1 ? 'Dispositivo: ' + r.disp.length : cap((r.disp || [])[0]);
+  $('#ficha').innerHTML = `<div class="fm" role="dialog" aria-modal="true" aria-label="Editar ${esc(r.codigo)}">
+    <div class="fh"><h3>Editar ${esc(r.codigo)}</h3><div class="fs">${esc(r.nombre)}</div><button class="fx" type="button" data-fx aria-label="Cerrar">&times;</button></div>
+    <div class="fb">
+      <span class="fl">Nombre <i>*</i></span><input type="text" value="${esc(r.nombre)}">
+      ${ta('Problema detectado', r.prob || '', 3)}
+      ${ta('Hipótesis', r.hip || '', 4)}
+      ${ta('Comentarios internos', r.com || '', 5)}
+      <div class="fk"><label><input type="checkbox"> Es un despliegue</label><label><input type="checkbox"> ABC test</label></div>
+      <div class="fmx"><h5>Métricas</h5>
+        <span class="fq">KPI principal <i>*</i></span>${sel(r.kpi, 'Selecciona KPI')}
+        <span class="fq">KPIs secundarios <em>(máx. 3)</em></span>
+        <div class="sel ph"><span>KPI secundario 1 (opcional)</span></div><div class="sel ph"><span>KPI secundario 2 (opcional)</span></div><div class="sel ph"><span>KPI secundario 3 (opcional)</span></div>
+        <div class="ice"><h5>Métricas y cálculo de ICE</h5>
+          <div class="g3">
+            <div><span class="fl">Impacto (I) 1-10</span><input type="text" inputmode="numeric" data-ice="i"></div>
+            <div><span class="fl">Confianza (C) 1-10</span><input type="text" inputmode="numeric" data-ice="c"></div>
+            <div><span class="fl">Esfuerzo (E) horas 1-10</span><input type="text" inputmode="numeric" data-ice="e"></div>
+          </div>
+          <div class="score"><span>ICE SCORE</span><b id="iceScore">0</b></div>
+          <details class="iexp"><summary>Ver explicación del framework ICE</summary><div>Impacto (I), Confianza (C) y Esfuerzo (E), cada uno de 1 a 10. Con I=10, C=8 y E=2 el Hub da 72 (el cálculo de esta maqueta es I × C × (11 − E) / 10, deducido de ese ejemplo).</div></details>
+        </div>
+      </div>
+      <div class="urls"><h5>URLs del test</h5>
+        <div class="fsp"><label><input type="checkbox"> Es Split Test (URL control ≠ URL variación)</label></div>
+        <div class="g2"><div><span class="fq">URL control</span><input type="text" placeholder="https://…"></div><div><span class="fq">URL variación</span><input type="text" placeholder="https://…"></div></div>
+      </div>
+      <div class="g3">
+        <div><span class="fl">Línea de negocio</span>${sel(r.linea, 'Selecciona')}</div>
+        <div><span class="fl">Tipo de producto</span>${sel(r.producto, 'Selecciona')}</div>
+        <div><span class="fl">Tipo de página</span>${sel(r.pagina, 'Selecciona')}</div>
+        <div><span class="fl">Mercado</span>${sel(merc, 'Selecciona', 'on')}</div>
+        <div><span class="fl">Tags</span>${sel(tags, 'Selecciona', 'on')}</div>
+        <div><span class="fl">Dispositivo</span>${sel(disp, 'Selecciona', 'on')}</div>
+      </div>
+      <div class="g2">${dt('Fecha de inicio', r.ini)}${dt('Fecha de fin', r.fin)}</div>
+      <span class="fl">URL de la tarea en Jira</span><input type="text" placeholder="https://tu-org.atlassian.net/browse/CRO-1234">
+      <div class="hint">Si la pegas aquí, aparecerá un botón «Ver en Jira» en la cabecera de la ficha.</div>
+      <div class="fnote">Maqueta del modal del CRO Hub: se rellena con el registro, pero Guardar no escribe en el Hub. El ICE no viene en los datos del roadmap (no se publica): se puede teclear para ver el cálculo.</div>
+    </div>
+    <div class="ff"><button type="button" data-fx>Cancelar</button><button type="button" class="go" data-fgo>Guardar</button></div></div>`;
+  $('#ficha').hidden = false;
+  $('#ficha').querySelectorAll('textarea').forEach(t => { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight + 2, 260) + 'px'; });
+}
+// ICE Score de la maqueta: I × C × (11 − E) / 10 (con I=10, C=8, E=2 da 72, como el ejemplo del Hub)
+function iceCalc() {
+  const v = k => parseFloat($('#ficha [data-ice=' + k + ']').value.replace(',', '.'));
+  const i = v('i'), c = v('c'), e = v('e');
+  $('#iceScore').textContent = [i, c, e].every(Number.isFinite) ? Math.round(i * c * (11 - e) / 10) : 0;
+}
+const closeFicha = () => { $('#ficha').hidden = true; };
 
 /* ================= estudios UX ================= */
 // Misma rejilla línea × paso que el Pipeline, pero con los estudios del Hub (UX Study, User Test, Micro Estudio).
@@ -1291,7 +1413,7 @@ function renderUxStats() {
 function uxHipHTML(h) {
   const i = h.it;
   const when = !i ? 'Sin datos en el Hub' : i.s == null ? 'Sin fecha de inicio' : fmtY(i.s) + (i.r.fin ? ' → ' + fmtY(D(i.r.fin)) : i.cat === 'live' ? ' → en marcha' : '');
-  return `<div class="hp"><div class="top"><span class="code">${esc(h.code)}</span>${i ? `<span class="st ${i.cat}">${esc(catLab(i))}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span>` : ''}${h.ver ? `<span class="sub">${esc(verLab(h.ver))}</span>` : ''}</div>
+  return `<div class="hp${i ? ' rec' : ''}"${i ? ` data-rec="${i.id}" title="Clic para abrir la ficha de edición del Hub"` : ''}><div class="top"><span class="code">${esc(h.code)}</span>${i ? `<span class="st ${i.cat}">${esc(catLab(i))}</span><span class="sub">${esc(TIPO[i.r.tipo] || i.r.tipo)}</span>` : ''}${h.ver ? `<span class="sub">${esc(verLab(h.ver))}</span>` : ''}</div>
     ${i ? `<div class="nm">${esc(i.short)}</div>` : ''}<div class="mt">${when}</div></div>`;
 }
 function uxItemHTML(u) {
@@ -1551,6 +1673,8 @@ function bind() {
     syncControls(); renderMain(); if (p.audit) openAudit(); else closeDrawer();
   };
   $('#drawer').addEventListener('click', e => {
+    const rc = e.target.closest('[data-rec]');
+    if (rc && !e.target.closest('details, a, button')) return openFicha(rc.dataset.rec);
     const l = e.target.closest('[data-lane]'); if (l) return openLane(l.dataset.lane);
     const u = e.target.closest('[data-ulane]'); if (u) return openUxLane(u.dataset.ulane);
     const p = e.target.closest('[data-plane]'); if (p) openPatchLane(p.dataset.plane);
@@ -1564,7 +1688,12 @@ function bind() {
     const el = e.target.closest('[data-k]'); if (!el) return;
     openLane(el.dataset.k, el.dataset.id);
   };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+  $('#ficha').addEventListener('input', e => { if (e.target.dataset.ice) iceCalc(); });
+  $('#ficha').addEventListener('click', e => {
+    if (e.target.id === 'ficha' || e.target.closest('[data-fx]')) closeFicha();
+    else if (e.target.closest('[data-fgo]')) { closeFicha(); toast('Maqueta: en el Hub, Guardar actualizaría el registro.'); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#ficha').hidden) closeFicha(); else closeDrawer(); } });
   $('#copy').onclick = () => {
     const t = $('#promptOut').textContent, b = $('#copy');
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {
