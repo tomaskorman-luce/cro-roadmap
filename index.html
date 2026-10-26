@@ -39,6 +39,17 @@ header .hsub{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;
 .seg button{background:transparent;border:0;padding:6px 14px;cursor:pointer;color:var(--mut);border-radius:6px;font-weight:500;white-space:nowrap}
 .seg button:hover{color:var(--tx)}
 .seg button.on{background:var(--acc);color:var(--acc-tx)}
+.segs{display:flex;gap:10px;flex:none}
+#theme{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;flex:none;color:var(--tx)}
+#theme .i-moon{display:none}
+html:not([data-theme=light]) #theme .i-sun{display:none}
+html:not([data-theme=light]) #theme .i-moon{display:block}
+.search{position:relative;display:flex;align-items:center;flex:0 1 280px;min-width:150px}
+.search svg{position:absolute;left:10px;color:var(--mut);pointer-events:none}
+header .search input[type=text]{padding:7px 28px 7px 34px;height:36px}
+.search #qClear{position:absolute;right:6px;width:22px;height:22px;border:0;border-radius:50%;background:transparent;color:var(--mut);cursor:pointer;font-size:17px;line-height:1;padding:0}
+.search #qClear:hover{background:var(--panel2);color:var(--tx)}
+.search #qClear[hidden]{display:none}
 .btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
 .btn:hover{border-color:var(--acc);background:var(--panel2)}
 /* sidebar azul del Hub: se reasignan los tokens dentro del aside y todos los controles se adaptan */
@@ -296,8 +307,12 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
   <h1>Pipeline/Roadmap</h1>
   <span class="hsub">CRO Hub · Logitravel · datos del <span id="snap"></span></span>
   <span class="sp"></span>
-  <div class="seg" id="viewSeg"><button data-v="matrix">Pipeline</button><button data-v="gantt">Roadmap</button><button data-v="ux">Estudios UX</button><button data-v="patch">Parches</button></div>
-  <button class="btn" id="theme">Claro / oscuro</button>
+  <div class="search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="q" placeholder="Buscar test, estudio o parche…" autocomplete="off" spellcheck="false" aria-label="Buscar tests, estudios UX o parches"><button id="qClear" type="button" title="Borrar búsqueda" aria-label="Borrar búsqueda" hidden>×</button></div>
+  <div class="segs">
+    <div class="seg" id="viewSegA"><button data-v="matrix">Pipeline</button><button data-v="gantt">Roadmap</button></div>
+    <div class="seg" id="viewSegB"><button data-v="ux">Estudios UX</button><button data-v="patch">Parches</button></div>
+  </div>
+  <button class="btn" id="theme" title="Cambiar entre tema claro y oscuro" aria-label="Cambiar entre tema claro y oscuro"><svg class="i-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg class="i-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
 </header>
 
 <aside>
@@ -461,7 +476,7 @@ if (!CFG) CFG = JSON.parse(JSON.stringify(DEFAULT_CFG));
 const saveCfg = () => { try { localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); } catch (e) {} };
 
 /* ================= estado de la vista ================= */
-const DEF = {view:'matrix', dur:14, back:4, fwd:8, ppd:12, today:'', mercs:[], devs:[], sub:'', line:'', sprint:'', hideSteps:['WAI'],
+const DEF = {view:'matrix', dur:14, back:4, fwd:8, ppd:12, today:'', mercs:[], devs:[], sub:'', line:'', sprint:'', hideSteps:['WAI'], q:'',
              showPatches:false, showDiscard:false, showEmpty:true, onlyGaps:false, open:{}};
 const S = JSON.parse(JSON.stringify(DEF));
 S.today = new Date().toISOString().slice(0, 10);
@@ -542,6 +557,14 @@ function build() {
             endEff: e == null ? null : (overdue ? TD : e)};
   });
 }
+// Buscador de cabecera: sin acentos ni mayúsculas; todas las palabras deben aparecer en código, nombre, línea o etiquetas (en estudios, también códigos de hipótesis)
+const sNorm = x => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const searchHit = (r, extra) => {
+  const q = sNorm(S.q).trim();
+  if (!q) return true;
+  const hay = sNorm([r.codigo, r.nombre, r.linea, r.pagina, r.producto, (r.tags || []).join(' '), extra || ''].join(' '));
+  return q.split(/\s+/).every(w => hay.includes(w));
+};
 const allMkt = it => !it.merc.length || it.merc.includes('TODOS');
 const allDev = it => !it.dev.length;
 function pass(it) {
@@ -551,7 +574,7 @@ function pass(it) {
   if (S.sub && !subMatch(it, S.sub)) return false;
   if (S.sprint && it.sprint !== S.sprint) return false;
   if (S.line && it.lane.fam !== S.line) return false;
-  return true;
+  return searchHit(it.r);
 }
 function overlaps(a, b) {
   if (a.s > b.endEff || b.s > a.endEff) return false;
@@ -988,7 +1011,7 @@ function passUx(u) {
   if (S.devs.length && !allDev(u) && !u.dev.some(d => S.devs.includes(d))) return false;
   if (S.sub && !subMatch(u, S.sub)) return false;
   if (S.line && u.lane.fam !== S.line) return false;
-  return true;
+  return searchHit(u.r, u.hips.map(h => h.code).join(' '));
 }
 function groupUx() {
   UXV = UX.filter(passUx); UXBY = {}; UXUNK = [];
@@ -1276,7 +1299,7 @@ function renderMain() {
   else if (S.view === 'patch') { groupPatch(); renderPatchStats(); renderPatch(); }
   else { renderStats(); S.view === 'matrix' ? renderMatrix() : renderGantt(); }
   $('#dock').style.display = S.view === 'ux' || S.view === 'patch' ? 'none' : '';
-  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.view));
+  document.querySelectorAll('#viewSegA button,#viewSegB button').forEach(b => b.classList.toggle('on', b.dataset.v === S.view));
   updatePrompt();
 }
 function syncControls() {
@@ -1318,7 +1341,7 @@ function bind() {
   $('#fLine').onchange = e => { S.line = e.target.value; renderMain(); };
   $('#fSub').onchange = e => { S.sub = e.target.value; renderMain(); };
   $('#fSprint').onchange = e => { S.sprint = e.target.value; renderMain(); };
-  document.querySelectorAll('#viewSeg button').forEach(b => b.onclick = () => { S.view = b.dataset.v; renderMain(); });
+  document.querySelectorAll('#viewSegA button,#viewSegB button').forEach(b => b.onclick = () => { S.view = b.dataset.v; renderMain(); });
   const SIDE_KEY = 'cro-roadmap-side-collapsed';
   const setSide = c => {
     document.querySelector('.app').classList.toggle('collapsed', c);
@@ -1331,12 +1354,17 @@ function bind() {
   document.addEventListener('keydown', e => {
     if ((e.key === 'b' || e.key === 'B') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) toggleSide();
   });
+  const qi = $('#q'), qc = $('#qClear');
+  qi.oninput = () => { S.q = qi.value; qc.hidden = !qi.value; renderMain(); };
+  qc.onclick = () => { qi.value = ''; qi.oninput(); qi.focus(); };
+  qi.onkeydown = e => { if (e.key === 'Escape' && qi.value) { e.preventDefault(); qc.onclick(); } };
+  document.addEventListener('keydown', e => { if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) { e.preventDefault(); qi.focus(); qi.select(); } });
   $('#theme').onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'; };
   $('#presets').innerHTML = PRESETS.map((p, i) => `<button class="btn" data-i="${i}">${esc(p.n)}</button>`).join('');
   $('#presets').onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
-    const p = PRESETS[+b.dataset.i], today = S.today;
-    Object.assign(S, JSON.parse(JSON.stringify(DEF)), p.d); S.today = today;
+    const p = PRESETS[+b.dataset.i], today = S.today, q = S.q;
+    Object.assign(S, JSON.parse(JSON.stringify(DEF)), p.d); S.today = today; S.q = q;
     syncControls(); renderMain(); if (p.audit) openAudit(); else closeDrawer();
   };
   $('#drawer').addEventListener('click', e => {
