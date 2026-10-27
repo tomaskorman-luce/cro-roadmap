@@ -209,6 +209,9 @@ html:not([data-theme=light]) .dv.tab{color:#99f6e4;background:#134e4a;border-col
 .urow .n{min-width:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .urow .uh{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .urow .ty{flex:none;line-height:1.4}
+.urow .utg{flex:none;display:inline-flex;align-items:center;gap:4px}
+.urow .uhc{flex:none;font:700 9.5px var(--mono);line-height:1.4;padding:0 5px;border-radius:4px;background:color-mix(in srgb,var(--tx) 10%,var(--panel));color:var(--tx);border:1px solid color-mix(in srgb,var(--tx) 22%,var(--panel));letter-spacing:.2px;white-space:nowrap}
+.urow .uhc.zero{background:transparent;color:var(--mut);border:1px solid var(--line);font-weight:400}
 .urow .d{flex:none;font:700 10.5px var(--mono);white-space:nowrap;opacity:.85}
 .urow.wip{border:1px solid var(--live);border-left:4px solid var(--live);background:color-mix(in srgb,var(--live) 24%,var(--panel));font-weight:600}
 .urow .live{flex:none;display:inline-flex;align-items:center;gap:4px;font:700 9.5px var(--mono);letter-spacing:.4px;color:var(--live)}
@@ -1343,7 +1346,8 @@ const studyName = u => {
 const UMAX = 5;
 function uxRow(u) {
   const w = u.r.estado === 'WIP', tip = esc(u.r.codigo + ' · ' + u.r.nombre + ' · ' + UXEST[u.r.estado] + ' · ' + uxWhen(u));
-  return `<div class="urow${w ? ' wip' : ''}" title="${tip}"><div class="uh"><span class="ty" title="${esc(u.ty)}">${UXTAG[u.ty]}</span>${w ? '<span class="live">EN CURSO</span>' : `<span class="d">${u.proxy ? '~' : ''}${u.when != null ? fmt(u.when) : 's/f'}</span>`}</div><span class="n">${esc(studyName(u))}</span></div>`;
+  const nh = u.hips.length, hc = `<span class="uhc${nh ? '' : ' zero'}" title="${nh} hipótesis asociadas">${nh} hip.</span>`;
+  return `<div class="urow${w ? ' wip' : ''}" title="${tip}"><div class="uh"><span class="utg"><span class="ty" title="${esc(u.ty)}">${UXTAG[u.ty]}</span>${hc}</span>${w ? '<span class="live">EN CURSO</span>' : `<span class="d">${u.proxy ? '~' : ''}${u.when != null ? fmt(u.when) : 's/f'}</span>`}</div><span class="n">${esc(studyName(u))}</span></div>`;
 }
 function uxCell(L, st) {
   const k = L.code + '|' + st.code, its = UXBY[k] || [], applies = L.steps.includes(st.code), ls = uxSets(its);
